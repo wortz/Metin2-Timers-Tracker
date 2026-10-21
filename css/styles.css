@@ -1056,3 +1056,528 @@ fieldset legend {
 .nav-badge-warning:not([hidden]) + .nav-badge {
   margin-left: -4px;
 }
+
+/* Doações da Guild */
+.guild-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.guild-tab {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.guild-tab:hover {
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.guild-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.guild-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.guild-info {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.guild-info h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.guild-total strong {
+  color: var(--warning);
+}
+
+.guild-count {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.guild-account {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.guild-account-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.guild-account-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.guild-account-title span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.guild-toggle {
+  background: transparent;
+  color: var(--text-muted);
+  padding: 2px 8px;
+}
+
+.guild-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+/* Linha compacta de uma personagem: nome | medalhas | doações | participação | guild run | apagar */
+.guild-row {
+  display: grid;
+  /* nome (12 caracteres) | descrição | medalhas | lv70+ | votar | apagar */
+  grid-template-columns: 150px 190px 92px 56px 84px 26px;
+  justify-content: start;
+  align-items: center;
+  column-gap: 14px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+.guild-row-labels {
+  border-top: none;
+  padding: 2px 0 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Títulos de Medalhas, Lv70+ e Votar centrados sobre o conteúdo de cada coluna */
+.guild-row-labels span:nth-child(n + 3):nth-child(-n + 5) {
+  text-align: center;
+}
+
+.guild-char-name {
+  min-width: 0;
+  font-size: 14px;
+}
+
+.guild-char-name strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Descrição: parece texto normal; ao passar o rato ou clicar vê-se que é editável. */
+.guild-desc-input {
+  width: 100%;
+  min-width: 0;
+  padding: 1px 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.guild-desc-input:hover {
+  border-color: var(--border);
+}
+
+.guild-desc-input:focus {
+  border-color: var(--accent);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.guild-medals-input {
+  width: 92px;
+  justify-self: center;
+  padding: 3px 6px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.guild-btns {
+  display: flex;
+  gap: 3px;
+}
+
+.guild-plus {
+  min-width: 30px;
+  padding: 2px 4px;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+/* Contador do dia (ex.: 2/3) ao lado de cada grupo de botões */
+.guild-counter {
+  align-self: center;
+  min-width: 28px;
+  padding: 1px 4px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.guild-counter:hover:not(:disabled) {
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.guild-counter:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.guild-counter.full {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.guild-plus:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.guild-row .icon-btn.small {
+  padding: 1px 6px;
+  line-height: 1;
+}
+
+/* Ecrãs bem estreitos (telemóvel): a linha quebra (nome em cima; medalhas e botões por baixo). */
+@media (max-width: 640px) {
+  .guild-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 4px;
+  }
+
+  .guild-row-labels {
+    display: none;
+  }
+
+  .guild-char-name {
+    flex: 1 1 40%;
+    min-width: 0;
+  }
+
+  .guild-desc-input {
+    flex: 1 1 50%;
+    width: auto;
+  }
+
+  .guild-row .icon-btn.small {
+    margin-left: auto;
+  }
+}
+
+/* Botão "Votar" e o seu menu */
+.guild-vote {
+  justify-self: center;
+  padding: 3px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Personagem que já votou tudo hoje: o botão desaparece e fica só um "✓ votado" discreto
+   (continua a poder clicar-se, para corrigir um clique enganado nos contadores). */
+.guild-vote.done {
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.guild-vote.done:hover {
+  background: transparent;
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.guild-popover {
+  position: fixed;
+  z-index: 60;
+  width: 340px;
+  max-width: calc(100vw - 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.guild-popover[hidden] {
+  display: none;
+}
+
+.guild-popover-title {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.guild-popover-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.guild-popover-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.guild-popover .guild-btns {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* Nível da guild (no cabeçalho) */
+.guild-level {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.guild-level-input {
+  width: 58px;
+  padding: 2px 6px;
+  font-size: 13px;
+}
+
+/* Toggle "lv70+" de cada personagem */
+.guild-lv70 {
+  justify-self: center;
+  padding: 2px 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.guild-lv70:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.guild-lv70.on {
+  background: var(--success);
+  border-color: var(--success);
+  color: #0f1a14;
+}
+
+/* Janela das guild runs (mais larga que as outras janelas, que têm 380px) */
+#guild-run-modal {
+  max-width: 780px;
+  width: 96vw;
+}
+
+.guild-run-card {
+  max-width: none;
+}
+
+.guild-run-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.guild-run-row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+.guild-run-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.guild-run-name small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.guild-run-btn {
+  min-width: 82px;
+}
+
+.guild-run-all {
+  color: var(--success);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.guild-run-done {
+  grid-column: 2;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.guild-run-done:empty {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .guild-run-row {
+    grid-template-columns: 1fr;
+  }
+
+  .guild-run-done {
+    grid-column: 1;
+  }
+}
+
+.guild-popover-note {
+  color: var(--success);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Linha de scrolls e Guild Land por baixo de cada personagem */
+.guild-items-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+  padding: 0 0 6px;
+}
+
+.guild-items-sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 6px;
+  background: var(--border);
+}
+
+.guild-item {
+  flex-direction: row;
+  align-items: center;
+  gap: 3px;
+  padding: 0 2px 0 5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.guild-item-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.guild-item-input {
+  width: 26px;
+  padding: 6px 0;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* As setas do browser ficam escondidas: usamos os botões .guild-step. */
+.guild-item-input::-webkit-inner-spin-button,
+.guild-item-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.guild-stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.guild-step {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-muted);
+  font-size: 8px;
+  line-height: 1;
+}
+
+.guild-step:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.guild-confirm-text {
+  margin: 0;
+  font-size: 14px;
+}
+
+.guild-confirm-question {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* Personagem que já votou tudo hoje: brilho verde na linha (e na linha dos scrolls por baixo).
+   A barra verde fica afastada do nome (na margem da conta) e nada disto mexe nas colunas. */
+.guild-row.voted,
+.guild-items-row.voted {
+  position: relative;
+  background: linear-gradient(90deg, rgba(77, 214, 138, 0.14), rgba(77, 214, 138, 0) 75%);
+  box-shadow: -8px 0 14px -4px rgba(77, 214, 138, 0.35);
+}
+
+.guild-row.voted::before,
+.guild-items-row.voted::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -7px; /* barra de 3px: acaba a 4px do nome */
+  width: 3px;
+  border-radius: 2px;
+  background: var(--success);
+  box-shadow: 0 0 8px rgba(77, 214, 138, 0.6);
+}

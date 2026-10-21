@@ -45,6 +45,7 @@ import {
 } from "./registrations.js";
 import { notifyRegistration } from "./notifications.js";
 import { startBio } from "./bio-ui.js";
+import { startGuild } from "./guild-ui.js";
 import { limitsFor } from "./limits.js";
 import { startUpdateCheck } from "./update-check.js";
 import { DISCORD_OAUTH_CLIENT_ID } from "./settings.js";
@@ -62,6 +63,7 @@ const navEl = document.getElementById("sidebar");
 const navAdmin = document.getElementById("nav-admin");
 const appViewEl = document.getElementById("app-view");
 const registryViewEl = document.getElementById("registry-view");
+const guildViewEl = document.getElementById("guild-view");
 const listTitleEl = document.getElementById("list-title");
 const costumesViewEl = document.getElementById("costumes-view");
 const adminViewEl = document.getElementById("admin-view");
@@ -222,6 +224,8 @@ onAuthChange((user, err) => {
     )
   );
 
+  unsubscribers.push(startGuild(user, () => userLimits()));
+
   unsubscribers.push(
     subscribeToRegistration(user.uid, (registration) => {
       latestRegistration = registration;
@@ -326,7 +330,7 @@ function kindText() {
 }
 
 // ---------- Navegação (barra lateral) ----------
-const PAGES = ["costume", "pet", "bio", "registos", "admin"];
+const PAGES = ["costume", "pet", "bio", "registos", "guild", "admin"];
 const PAGE_COOKIE = "timers_page";
 let currentPage = null;
 
@@ -358,6 +362,7 @@ function navigate(page) {
   costumesViewEl.hidden = !isList;
   bioViewEl.hidden = page !== "bio";
   registryViewEl.hidden = page !== "registos";
+  guildViewEl.hidden = page !== "guild";
   adminViewEl.hidden = page !== "admin";
 
   for (const item of navEl.querySelectorAll(".nav-item[data-page]")) {

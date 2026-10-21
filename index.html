@@ -45,6 +45,7 @@
         <button class="nav-item" data-page="pet"><span class="nav-emoji">🐾</span><span>Pets</span><span class="nav-badge nav-badge-warning" hidden></span><span class="nav-badge" hidden></span></button>
         <button class="nav-item" data-page="bio"><span class="nav-emoji">🧪</span><span>Biologo / 6-7</span><span class="nav-badge" hidden></span></button>
         <button class="nav-item" data-page="registos"><span class="nav-emoji">🐉</span><span>Registos Dungeons</span><span class="nav-badge" hidden></span></button>
+        <button class="nav-item" data-page="guild"><span class="nav-emoji">🏅</span><span>Guild (medalhas)</span></button>
       </nav>
       <!-- Só o admin vê isto: fica logo acima da linha que separa o nome do admin -->
         <button class="nav-item" data-page="admin" id="nav-admin" hidden><span class="nav-emoji">🛠</span><span>Administração</span></button>
@@ -56,6 +57,17 @@
     </aside>
 
     <main>
+      <section id="guild-view" class="view guild-view" hidden>
+        <div class="section-header">
+          <h2>Doações da Guild</h2>
+          <button id="guild-new-btn" class="secondary">+ Nova guild</button>
+        </div>
+        <div id="guild-tabs" class="guild-tabs"></div>
+        <div id="guild-body"></div>
+        <!-- Menu do botão "Votar" (preenchido e posicionado pelo js/guild-ui.js) -->
+        <div id="guild-popover" class="guild-popover" hidden></div>
+      </section>
+
       <section id="registry-view" class="view" hidden>
         <div class="section-header">
           <h2>Registos Dungeons</h2>
@@ -234,6 +246,43 @@
     </form>
   </dialog>
 
+  <dialog id="guild-confirm-modal">
+    <div class="card">
+      <h2>Medalhas insuficientes</h2>
+      <p id="guild-confirm-text" class="guild-confirm-text"></p>
+      <p class="guild-confirm-question">Queres continuar?</p>
+      <div class="modal-actions">
+        <button type="button" id="guild-confirm-no" class="secondary">Não</button>
+        <button type="button" id="guild-confirm-yes">Sim</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="guild-run-modal">
+    <div class="card guild-run-card">
+      <h2>Guild Run</h2>
+      <p id="guild-run-info" class="hint-inline"></p>
+      <div id="guild-run-list" class="guild-run-list"></div>
+      <div class="modal-actions">
+        <button type="button" id="guild-run-close" class="secondary">Fechar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="guild-input-modal">
+    <form id="guild-input-form" class="card">
+      <h2 id="guild-input-title">Novo</h2>
+      <label><span id="guild-input-label">Nome</span>
+        <input id="guild-input" required maxlength="40" autocomplete="off" />
+      </label>
+      <p id="guild-input-error" class="error"></p>
+      <div class="modal-actions">
+        <button type="button" id="guild-input-cancel" class="secondary">Cancelar</button>
+        <button type="submit">Criar</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="bio-character-modal">
     <form id="bio-character-form" class="card">
       <h2>Nova personagem</h2>
@@ -374,26 +423,29 @@
   <script type="importmap">
   {
     "imports": {
-      "./js/admin.js": "./js/admin.js?v=202610171659",
-      "./js/auth.js": "./js/auth.js?v=202610171659",
-      "./js/bio-ui.js": "./js/bio-ui.js?v=202610171659",
-      "./js/bio.js": "./js/bio.js?v=202610171659",
-      "./js/characters.js": "./js/characters.js?v=202610171659",
-      "./js/costumes.js": "./js/costumes.js?v=202610171659",
-      "./js/firebase-config.js": "./js/firebase-config.js?v=202610171659",
-      "./js/firebase-init.js": "./js/firebase-init.js?v=202610171659",
-      "./js/kinds.js": "./js/kinds.js?v=202610171659",
-      "./js/limits.js": "./js/limits.js?v=202610171659",
-      "./js/main.js": "./js/main.js?v=202610171659",
-      "./js/notifications.js": "./js/notifications.js?v=202610171659",
-      "./js/registrations.js": "./js/registrations.js?v=202610171659",
-      "./js/sections.js": "./js/sections.js?v=202610171659",
-      "./js/settings.js": "./js/settings.js?v=202610171659",
-      "./js/update-check.js": "./js/update-check.js?v=202610171659",
-      "./js/user-settings.js": "./js/user-settings.js?v=202610171659"
+      "./js/admin.js": "./js/admin.js?v=202610220121",
+      "./js/auth.js": "./js/auth.js?v=202610220121",
+      "./js/bio-ui.js": "./js/bio-ui.js?v=202610220121",
+      "./js/bio.js": "./js/bio.js?v=202610220121",
+      "./js/characters.js": "./js/characters.js?v=202610220121",
+      "./js/costumes.js": "./js/costumes.js?v=202610220121",
+      "./js/firebase-config.js": "./js/firebase-config.js?v=202610220121",
+      "./js/firebase-init.js": "./js/firebase-init.js?v=202610220121",
+      "./js/guild-rules.js": "./js/guild-rules.js?v=202610220121",
+      "./js/guild-ui.js": "./js/guild-ui.js?v=202610220121",
+      "./js/guild.js": "./js/guild.js?v=202610220121",
+      "./js/kinds.js": "./js/kinds.js?v=202610220121",
+      "./js/limits.js": "./js/limits.js?v=202610220121",
+      "./js/main.js": "./js/main.js?v=202610220121",
+      "./js/notifications.js": "./js/notifications.js?v=202610220121",
+      "./js/registrations.js": "./js/registrations.js?v=202610220121",
+      "./js/sections.js": "./js/sections.js?v=202610220121",
+      "./js/settings.js": "./js/settings.js?v=202610220121",
+      "./js/update-check.js": "./js/update-check.js?v=202610220121",
+      "./js/user-settings.js": "./js/user-settings.js?v=202610220121"
     }
   }
   </script>
-  <script type="module" src="js/main.js?v=202610171659"></script>
+  <script type="module" src="js/main.js?v=202610220121"></script>
 </body>
 </html>

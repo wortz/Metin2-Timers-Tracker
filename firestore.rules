@@ -70,6 +70,31 @@ service cloud.firestore {
       allow delete: if isActive() && (resource.data.ownerUid == request.auth.uid || isAdmin());
     }
 
+    // Guilds de doações (medalhas): cada utilizador só vê e mexe nas suas. Os limites
+    // (2 guilds, 90 personagens por guild) são verificados na app.
+    match /guilds/{guildId} {
+      allow read: if isActive() && (resource == null || resource.data.ownerUid == request.auth.uid);
+      allow create: if isActive() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isActive() && resource.data.ownerUid == request.auth.uid;
+      allow delete: if isActive() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+    }
+
+    match /guildAccounts/{accountId} {
+      allow read: if isActive() && (resource == null || resource.data.ownerUid == request.auth.uid);
+      allow create: if isActive() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isActive() && resource.data.ownerUid == request.auth.uid;
+      allow delete: if isActive() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+    }
+
+    match /guildCharacters/{characterId} {
+      allow read: if isActive() && (resource == null || resource.data.ownerUid == request.auth.uid);
+      allow create: if isActive() && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.medals is int && request.resource.data.medals >= 0;
+      allow update: if isActive() && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.medals is int && request.resource.data.medals >= 0;
+      allow delete: if isActive() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+    }
+
     // Registo de Meley/Balathor (um por conta) — só o próprio dono lê/escreve.
     match /registrations/{uid} {
       allow read, write: if isActive() && request.auth.uid == uid;
