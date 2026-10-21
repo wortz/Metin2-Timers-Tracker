@@ -85,6 +85,15 @@ function guildLimitMessage() {
 const fmt = (n) => Number(n || 0).toLocaleString("pt-PT");
 const byName = (a, b) => a.name.localeCompare(b.name, "pt");
 
+// Ordem em que foram adicionadas: as mais antigas primeiro. Um documento acabado de criar ainda não
+// tem a hora do servidor (createdAt vazio), por isso conta como o mais recente e fica no fim.
+const createdMs = (item) => {
+  const t = item.createdAt;
+  if (t && typeof t.toMillis === "function") return t.toMillis();
+  return typeof t === "number" ? t : Number.MAX_SAFE_INTEGER;
+};
+const byCreated = (a, b) => createdMs(a) - createdMs(b) || a.id.localeCompare(b.id);
+
 function readSelected() {
   try {
     return localStorage.getItem(SELECTED_KEY);
@@ -283,7 +292,7 @@ function accountsOf(guildId) {
 }
 
 function buildAccount(account, guildAtLimit) {
-  const chars = characters.filter((c) => c.accountId === account.id).sort(byName);
+  const chars = characters.filter((c) => c.accountId === account.id).sort(byCreated);
   const sum = chars.reduce((s, c) => s + (c.medals || 0), 0);
   const collapsed = collapsedAccounts.has(account.id);
 
@@ -775,7 +784,7 @@ function renderRunModal() {
   const accountName = (id) => accounts.find((a) => a.id === id)?.name || "";
   const chars = charactersOfGuild(guild.id)
     .filter((c) => c.lv70)
-    .sort((a, b) => accountName(a.accountId).localeCompare(accountName(b.accountId), "pt") || byName(a, b));
+    .sort((a, b) => accountName(a.accountId).localeCompare(accountName(b.accountId), "pt") || byCreated(a, b));
 
   runList.innerHTML = "";
   if (chars.length === 0) {
