@@ -36,7 +36,7 @@ export function setPrivileged(uid, privileged) {
 // "Apagar" utilizador = desativar a conta (impede novo login) + apagar os seus trajes e pets.
 export async function disableUser(uid) {
   const batch = writeBatch(db);
-  for (const name of ["costumes", "pets", "bioTimers", "guilds", "guildAccounts", "guildCharacters"]) {
+  for (const name of ["costumes", "pets", "bioTimers", "guilds", "guildAccounts", "guildCharacters", "hydraDays", "hydraMonths"]) {
     const snap = await getDocs(query(collection(db, name), where("ownerUid", "==", uid)));
     snap.forEach((docSnap) => batch.delete(docSnap.ref));
   }

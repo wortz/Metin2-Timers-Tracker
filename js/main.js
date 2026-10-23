@@ -46,6 +46,8 @@ import {
 import { notifyRegistration } from "./notifications.js";
 import { startBio } from "./bio-ui.js";
 import { startGuild } from "./guild-ui.js";
+import { startHydras } from "./hydras-ui.js";
+import { startHydraTimer } from "./hydra-timer.js";
 import { limitsFor } from "./limits.js";
 import { startUpdateCheck } from "./update-check.js";
 import { DISCORD_OAUTH_CLIENT_ID } from "./settings.js";
@@ -64,6 +66,8 @@ const navAdmin = document.getElementById("nav-admin");
 const appViewEl = document.getElementById("app-view");
 const registryViewEl = document.getElementById("registry-view");
 const guildViewEl = document.getElementById("guild-view");
+const hidrasViewEl = document.getElementById("hidras-view");
+const fazerHidraViewEl = document.getElementById("fazer-hidra-view");
 const listTitleEl = document.getElementById("list-title");
 const costumesViewEl = document.getElementById("costumes-view");
 const adminViewEl = document.getElementById("admin-view");
@@ -225,6 +229,8 @@ onAuthChange((user, err) => {
   );
 
   unsubscribers.push(startGuild(user, () => userLimits()));
+  unsubscribers.push(startHydras(user));
+  unsubscribers.push(startHydraTimer(user));
 
   unsubscribers.push(
     subscribeToRegistration(user.uid, (registration) => {
@@ -330,7 +336,7 @@ function kindText() {
 }
 
 // ---------- Navegação (barra lateral) ----------
-const PAGES = ["costume", "pet", "bio", "registos", "guild", "admin"];
+const PAGES = ["costume", "pet", "bio", "registos", "guild", "hidras", "fazer-hidra", "admin"];
 const PAGE_COOKIE = "timers_page";
 let currentPage = null;
 
@@ -363,15 +369,23 @@ function navigate(page) {
   bioViewEl.hidden = page !== "bio";
   registryViewEl.hidden = page !== "registos";
   guildViewEl.hidden = page !== "guild";
+  hidrasViewEl.hidden = page !== "hidras";
+  fazerHidraViewEl.hidden = page !== "fazer-hidra";
   adminViewEl.hidden = page !== "admin";
 
   for (const item of navEl.querySelectorAll(".nav-item[data-page]")) {
-    item.classList.toggle("active", item.dataset.page === page);
+    // O histórico das hidras abre-se a partir do menu "Hidras" (que mostra o cronómetro).
+    item.classList.toggle("active", item.dataset.page === page || (item.dataset.page === "fazer-hidra" && page === "hidras"));
   }
   savePageCookie(page);
   closeSidebar();
   if (isList) renderCostumes();
 }
+
+document.addEventListener("click", (e) => {
+  const goto = e.target.closest("[data-goto-page]");
+  if (goto) navigate(goto.dataset.gotoPage);
+});
 
 navEl.addEventListener("click", (e) => {
   const item = e.target.closest(".nav-item[data-page]");

@@ -1599,3 +1599,376 @@ fieldset legend {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ---------- Hidras ---------- */
+.hydra-default-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.hydra-default-label input {
+  width: 90px;
+}
+
+.hydra-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
+.hydra-summary b {
+  color: var(--warning);
+}
+
+.hydra-row {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) 58px 58px 58px 92px 74px;
+  align-items: center;
+  column-gap: 12px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.hydra-row-head > :nth-child(2),
+.hydra-row > :nth-child(n + 3) {
+  text-align: center;
+}
+
+.hydra-row-head {
+  border-top: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.hydra-row.today {
+  background: rgba(255, 184, 77, 0.1);
+  box-shadow: inset 3px 0 0 var(--warning);
+}
+
+.hydra-row.locked {
+  color: var(--text-muted);
+}
+
+.hydra-tag {
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.hydra-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start; /* as células começam à esquerda */
+  gap: 4px;
+}
+
+.hydra-chip {
+  width: 38px;
+  padding: 3px 2px;
+  text-align: center !important; /* número centrado na célula */
+  font-size: 13px;
+}
+
+.hydra-chip.readonly {
+  display: inline-block;
+  width: 30px;
+  padding: 3px 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+}
+
+/* "Nova hidra": ocupa sempre a linha de baixo (por baixo dos números do dia), centrada. */
+.hydra-add {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.hydra-add-btn {
+  min-width: 26px;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+
+.hydra-price-input {
+  width: 84px;
+  justify-self: center;
+  padding: 3px 6px;
+  text-align: center;
+  font-size: 13px;
+}
+
+/* Sem preço escrito: usa o padrão e fica a vermelho */
+.hydra-price-input.unset {
+  background: rgba(255, 92, 92, 0.3);
+  border-color: var(--danger);
+}
+
+.hydra-price-input:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+
+.hydra-month-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 8px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.hydra-month-row > :first-child {
+  text-align: left;
+}
+
+@media (max-width: 760px) {
+  /* Telemóvel: cada dia passa a um bloco (data e totais em cima, hidras por baixo). */
+  .hydra-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+  }
+
+  .hydra-row-head {
+    display: none;
+  }
+
+  .hydra-date {
+    flex: 1 1 100%;
+    font-weight: 700;
+  }
+
+  .hydra-chips {
+    flex: 1 1 100%;
+    order: 9;
+  }
+}
+
+.hydra-default-label[hidden] {
+  display: none;
+}
+
+/* A página das Hidras ocupa a largura toda da janela (e encolhe com ela) */
+main:has(#hidras-view:not([hidden])) {
+  max-width: none;
+}
+
+/* Dia do mês com mais cofres */
+.hydra-row.best {
+  background: rgba(77, 214, 138, 0.38);
+  box-shadow: inset 0 0 0 1px var(--success), 0 0 12px rgba(77, 214, 138, 0.45);
+}
+
+.hydra-row.today.best {
+  box-shadow: inset 3px 0 0 var(--warning), inset 0 0 0 1px var(--success), 0 0 12px rgba(77, 214, 138, 0.45);
+}
+
+
+
+
+.hydra-import-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+#hydra-import-modal {
+  max-width: 520px;
+}
+
+#hydra-import-modal textarea {
+  width: 100%;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.hydra-import-actions {
+  flex-wrap: wrap;
+}
+
+/* ---------- Fazer Hidra ---------- */
+.hydra-timer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.hydra-timer-display {
+  font-size: 72px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.hydra-timer-display.running {
+  color: var(--warning);
+}
+
+.hydra-timer-status {
+  margin: 0;
+  max-width: 460px;
+}
+
+.hydra-timer-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.hydra-timer-start {
+  padding: 14px 40px;
+  font-size: 18px;
+}
+
+.hydra-timer-chests {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.hydra-timer-chest {
+  width: 52px;
+  height: 52px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.hydra-timer-chest.selected {
+  background: var(--success);
+  border-color: var(--success);
+  color: #0f1a14;
+}
+
+.hydra-timer-chest:disabled:not(.selected) {
+  opacity: 0.4;
+}
+
+/* Cabeçalho das Hidras: botão de voltar à esquerda, título ao centro, ações à direita */
+.hydra-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  justify-content: initial;
+}
+
+.hydra-header h2 {
+  text-align: center;
+  margin: 0;
+}
+
+.hydra-header-back {
+  justify-self: start;
+}
+
+.hydra-header-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+  .hydra-header {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .hydra-header-back,
+  .hydra-header-actions {
+    justify-self: center;
+  }
+}
+
+.hydra-today-card {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.hydra-today-card h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.hydra-today-card .hydra-chips {
+  margin: 8px 0;
+}
+
+.hydra-import-open {
+  margin-top: 16px;
+}
+
+.hydra-today-card {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.hydra-today-card h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.hydra-today-card .hydra-chips {
+  margin: 8px 0;
+}
+
+.hydra-import-open {
+  margin-top: 16px;
+}
+
+/* Hidras: sem as setas de subir/descer nos campos de número */
+.hydra-chip,
+.hydra-price-input,
+#hydra-default-price {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.hydra-chip::-webkit-outer-spin-button,
+.hydra-chip::-webkit-inner-spin-button,
+.hydra-price-input::-webkit-outer-spin-button,
+.hydra-price-input::-webkit-inner-spin-button,
+#hydra-default-price::-webkit-outer-spin-button,
+#hydra-default-price::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

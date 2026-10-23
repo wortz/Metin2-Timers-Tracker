@@ -46,6 +46,7 @@
         <button class="nav-item" data-page="bio"><span class="nav-emoji">🧪</span><span>Biologo / 6-7</span><span class="nav-badge" hidden></span></button>
         <button class="nav-item" data-page="registos"><span class="nav-emoji">🐉</span><span>Registos Dungeons</span><span class="nav-badge" hidden></span></button>
         <button class="nav-item" data-page="guild"><span class="nav-emoji">🏅</span><span>Guild (medalhas)</span></button>
+        <button class="nav-item" data-page="fazer-hidra"><span class="nav-emoji">🐍</span><span>Hidras</span><span class="nav-badge" hidden></span></button>
       </nav>
       <!-- Só o admin vê isto: fica logo acima da linha que separa o nome do admin -->
         <button class="nav-item" data-page="admin" id="nav-admin" hidden><span class="nav-emoji">🛠</span><span>Administração</span></button>
@@ -66,6 +67,42 @@
         <div id="guild-body"></div>
         <!-- Menu do botão "Votar" (preenchido e posicionado pelo js/guild-ui.js) -->
         <div id="guild-popover" class="guild-popover" hidden></div>
+      </section>
+
+      <section id="hidras-view" class="view" hidden>
+        <div class="section-header hydra-header">
+          <button type="button" class="secondary hydra-header-back" data-goto-page="fazer-hidra">← Fazer Hidra</button>
+          <h2>Hidras</h2>
+          <div class="hydra-header-actions">
+            <label id="hydra-default-label" class="hydra-default-label"><span id="hydra-default-title">Preço padrão (por cofre)</span>
+              <input id="hydra-default-price" type="number" min="0" step="0.01" />
+            </label>
+          </div>
+        </div>
+        <p class="dm-delay-hint">Cada hidra é o número de cofres que deu. Só se editam as hidras de <strong>hoje</strong> e de <strong>ontem</strong>, e o preço de <strong>hoje</strong>, <strong>ontem</strong> e <strong>anteontem</strong>. Um dia sem preço usa o preço padrão <strong>desse mês</strong> e fica a vermelho enquanto ainda o podes editar (últimos 3 dias).</p>
+        <div id="hydra-tabs" class="guild-tabs"></div>
+        <div id="hydra-body"></div>
+        <button id="hydra-import-open" type="button" class="secondary hydra-import-open">Importar dados…</button>
+      </section>
+
+      <section id="fazer-hidra-view" class="view" hidden>
+        <div class="section-header">
+          <h2>Fazer Hidra</h2>
+          <button type="button" class="secondary" data-goto-page="hidras">Histórico</button>
+          <label class="hydra-default-label"><input id="hydra-timer-sound" type="checkbox" checked /> Som</label>
+          <button id="hydra-timer-sound-test" type="button" class="secondary">Testar som</button>
+        </div>
+        <div class="hydra-timer-card">
+          <div id="hydra-timer-display" class="hydra-timer-display">20:00</div>
+          <p id="hydra-timer-status" class="hydra-timer-status"></p>
+          <div id="hydra-timer-actions" class="hydra-timer-actions"></div>
+        </div>
+        <div class="hydra-today-card">
+          <h3>Hoje</h3>
+          <p id="hydra-timer-today" class="dm-delay-hint"></p>
+          <div id="hydra-timer-chips" class="hydra-chips"></div>
+          <p class="dm-delay-hint">Podes corrigir o número de cofres de cada hidra (campo vazio remove a hidra).</p>
+        </div>
       </section>
 
       <section id="registry-view" class="view" hidden>
@@ -111,6 +148,19 @@
       </section>
     </main>
   </div>
+
+  <dialog id="hydra-import-modal">
+    <form id="hydra-import-form" class="card" method="dialog">
+      <h2>Importar hidras</h2>
+      <p class="dm-delay-hint">Cola uma linha por dia: a data e depois os cofres de cada hidra (0 a 5), por exemplo <code>23/10/2026 2 3 4 2</code>. Os dias colados substituem as hidras desses dias.</p>
+      <textarea id="hydra-import-text" rows="10" placeholder="23/10/2026 2 3 4 2"></textarea>
+      <div class="hydra-import-actions">
+        <button id="hydra-import-btn" type="button">Importar</button>
+        <button id="hydra-delete-all-btn" type="button" class="secondary">Apagar todas as hidras</button>
+        <button type="button" id="hydra-import-close" class="secondary">Fechar</button>
+      </div>
+    </form>
+  </dialog>
 
   <dialog id="costume-modal">
     <form id="costume-form" class="card">
@@ -423,29 +473,33 @@
   <script type="importmap">
   {
     "imports": {
-      "./js/admin.js": "./js/admin.js?v=202610231647",
-      "./js/auth.js": "./js/auth.js?v=202610231647",
-      "./js/bio-ui.js": "./js/bio-ui.js?v=202610231647",
-      "./js/bio.js": "./js/bio.js?v=202610231647",
-      "./js/characters.js": "./js/characters.js?v=202610231647",
-      "./js/costumes.js": "./js/costumes.js?v=202610231647",
-      "./js/firebase-config.js": "./js/firebase-config.js?v=202610231647",
-      "./js/firebase-init.js": "./js/firebase-init.js?v=202610231647",
-      "./js/guild-rules.js": "./js/guild-rules.js?v=202610231647",
-      "./js/guild-ui.js": "./js/guild-ui.js?v=202610231647",
-      "./js/guild.js": "./js/guild.js?v=202610231647",
-      "./js/kinds.js": "./js/kinds.js?v=202610231647",
-      "./js/limits.js": "./js/limits.js?v=202610231647",
-      "./js/main.js": "./js/main.js?v=202610231647",
-      "./js/notifications.js": "./js/notifications.js?v=202610231647",
-      "./js/registrations.js": "./js/registrations.js?v=202610231647",
-      "./js/sections.js": "./js/sections.js?v=202610231647",
-      "./js/settings.js": "./js/settings.js?v=202610231647",
-      "./js/update-check.js": "./js/update-check.js?v=202610231647",
-      "./js/user-settings.js": "./js/user-settings.js?v=202610231647"
+      "./js/admin.js": "./js/admin.js?v=202610232235",
+      "./js/auth.js": "./js/auth.js?v=202610232235",
+      "./js/bio-ui.js": "./js/bio-ui.js?v=202610232235",
+      "./js/bio.js": "./js/bio.js?v=202610232235",
+      "./js/characters.js": "./js/characters.js?v=202610232235",
+      "./js/costumes.js": "./js/costumes.js?v=202610232235",
+      "./js/firebase-config.js": "./js/firebase-config.js?v=202610232235",
+      "./js/firebase-init.js": "./js/firebase-init.js?v=202610232235",
+      "./js/guild-rules.js": "./js/guild-rules.js?v=202610232235",
+      "./js/guild-ui.js": "./js/guild-ui.js?v=202610232235",
+      "./js/guild.js": "./js/guild.js?v=202610232235",
+      "./js/hydra-timer.js": "./js/hydra-timer.js?v=202610232235",
+      "./js/hydras-rules.js": "./js/hydras-rules.js?v=202610232235",
+      "./js/hydras-ui.js": "./js/hydras-ui.js?v=202610232235",
+      "./js/hydras.js": "./js/hydras.js?v=202610232235",
+      "./js/kinds.js": "./js/kinds.js?v=202610232235",
+      "./js/limits.js": "./js/limits.js?v=202610232235",
+      "./js/main.js": "./js/main.js?v=202610232235",
+      "./js/notifications.js": "./js/notifications.js?v=202610232235",
+      "./js/registrations.js": "./js/registrations.js?v=202610232235",
+      "./js/sections.js": "./js/sections.js?v=202610232235",
+      "./js/settings.js": "./js/settings.js?v=202610232235",
+      "./js/update-check.js": "./js/update-check.js?v=202610232235",
+      "./js/user-settings.js": "./js/user-settings.js?v=202610232235"
     }
   }
   </script>
-  <script type="module" src="js/main.js?v=202610231647"></script>
+  <script type="module" src="js/main.js?v=202610232235"></script>
 </body>
 </html>

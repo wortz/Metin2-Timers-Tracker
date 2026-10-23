@@ -95,6 +95,26 @@ service cloud.firestore {
       allow delete: if isActive() && (resource.data.ownerUid == request.auth.uid || isAdmin());
     }
 
+    // Registo de Hidras (por utilizador): cada um só vê e mexe nos seus. As regras de "só se
+    // editam hoje e ontem" são verificadas na app.
+    match /hydraDays/{dayId} {
+      allow read: if isActive() && (resource == null || resource.data.ownerUid == request.auth.uid);
+      allow create: if isActive() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isActive() && resource.data.ownerUid == request.auth.uid;
+      allow delete: if isActive() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+    }
+
+    match /hydraMonths/{monthId} {
+      allow read: if isActive() && (resource == null || resource.data.ownerUid == request.auth.uid);
+      allow create: if isActive() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isActive() && resource.data.ownerUid == request.auth.uid;
+      allow delete: if isActive() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+    }
+
+    match /hydraSettings/{uid} {
+      allow read, write: if isActive() && request.auth.uid == uid;
+    }
+
     // Registo de Meley/Balathor (um por conta) — só o próprio dono lê/escreve.
     match /registrations/{uid} {
       allow read, write: if isActive() && request.auth.uid == uid;
