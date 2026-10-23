@@ -48,6 +48,7 @@ import { startBio } from "./bio-ui.js";
 import { startGuild } from "./guild-ui.js";
 import { startHydras } from "./hydras-ui.js";
 import { startHydraTimer } from "./hydra-timer.js";
+import "./theme.js";
 import { limitsFor } from "./limits.js";
 import { startUpdateCheck } from "./update-check.js";
 import { DISCORD_OAUTH_CLIENT_ID } from "./settings.js";

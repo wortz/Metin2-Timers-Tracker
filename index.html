@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Metin2 Timers Tracker</title>
 <link rel="icon" type="image/png" href="assets/icons/favicon.png" />
-<link rel="stylesheet" href="css/styles.css" />
+<script>try{var t=localStorage.getItem("theme");if(t&&t!=="roxo")document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="stylesheet" href="css/styles.css?v=202610240135" />
 </head>
 <body>
 
@@ -52,6 +53,12 @@
         <button class="nav-item" data-page="admin" id="nav-admin" hidden><span class="nav-emoji">🛠</span><span>Administração</span></button>
       <div class="sidebar-footer">
         <span id="user-email" class="user-email"></span>
+        <div class="theme-picker" role="group" aria-label="Tema">
+          <span>Tema</span>
+          <button type="button" class="theme-swatch" data-theme="roxo" title="Roxo"></button>
+          <button type="button" class="theme-swatch" data-theme="oceano" title="Oceano"></button>
+          <button type="button" class="theme-swatch" data-theme="brasa" title="Brasa"></button>
+        </div>
         <button id="open-settings-btn" class="nav-item"><span class="nav-emoji">⚙</span><span>Configurações</span></button>
         <button id="logout-btn" class="nav-item"><span class="nav-emoji">⎋</span><span>Sair</span></button>
       </div>
@@ -473,33 +480,34 @@
   <script type="importmap">
   {
     "imports": {
-      "./js/admin.js": "./js/admin.js?v=202610240128",
-      "./js/auth.js": "./js/auth.js?v=202610240128",
-      "./js/bio-ui.js": "./js/bio-ui.js?v=202610240128",
-      "./js/bio.js": "./js/bio.js?v=202610240128",
-      "./js/characters.js": "./js/characters.js?v=202610240128",
-      "./js/costumes.js": "./js/costumes.js?v=202610240128",
-      "./js/firebase-config.js": "./js/firebase-config.js?v=202610240128",
-      "./js/firebase-init.js": "./js/firebase-init.js?v=202610240128",
-      "./js/guild-rules.js": "./js/guild-rules.js?v=202610240128",
-      "./js/guild-ui.js": "./js/guild-ui.js?v=202610240128",
-      "./js/guild.js": "./js/guild.js?v=202610240128",
-      "./js/hydra-timer.js": "./js/hydra-timer.js?v=202610240128",
-      "./js/hydras-rules.js": "./js/hydras-rules.js?v=202610240128",
-      "./js/hydras-ui.js": "./js/hydras-ui.js?v=202610240128",
-      "./js/hydras.js": "./js/hydras.js?v=202610240128",
-      "./js/kinds.js": "./js/kinds.js?v=202610240128",
-      "./js/limits.js": "./js/limits.js?v=202610240128",
-      "./js/main.js": "./js/main.js?v=202610240128",
-      "./js/notifications.js": "./js/notifications.js?v=202610240128",
-      "./js/registrations.js": "./js/registrations.js?v=202610240128",
-      "./js/sections.js": "./js/sections.js?v=202610240128",
-      "./js/settings.js": "./js/settings.js?v=202610240128",
-      "./js/update-check.js": "./js/update-check.js?v=202610240128",
-      "./js/user-settings.js": "./js/user-settings.js?v=202610240128"
+      "./js/admin.js": "./js/admin.js?v=202610240135",
+      "./js/auth.js": "./js/auth.js?v=202610240135",
+      "./js/bio-ui.js": "./js/bio-ui.js?v=202610240135",
+      "./js/bio.js": "./js/bio.js?v=202610240135",
+      "./js/characters.js": "./js/characters.js?v=202610240135",
+      "./js/costumes.js": "./js/costumes.js?v=202610240135",
+      "./js/firebase-config.js": "./js/firebase-config.js?v=202610240135",
+      "./js/firebase-init.js": "./js/firebase-init.js?v=202610240135",
+      "./js/guild-rules.js": "./js/guild-rules.js?v=202610240135",
+      "./js/guild-ui.js": "./js/guild-ui.js?v=202610240135",
+      "./js/guild.js": "./js/guild.js?v=202610240135",
+      "./js/hydra-timer.js": "./js/hydra-timer.js?v=202610240135",
+      "./js/hydras-rules.js": "./js/hydras-rules.js?v=202610240135",
+      "./js/hydras-ui.js": "./js/hydras-ui.js?v=202610240135",
+      "./js/hydras.js": "./js/hydras.js?v=202610240135",
+      "./js/kinds.js": "./js/kinds.js?v=202610240135",
+      "./js/limits.js": "./js/limits.js?v=202610240135",
+      "./js/main.js": "./js/main.js?v=202610240135",
+      "./js/notifications.js": "./js/notifications.js?v=202610240135",
+      "./js/registrations.js": "./js/registrations.js?v=202610240135",
+      "./js/sections.js": "./js/sections.js?v=202610240135",
+      "./js/settings.js": "./js/settings.js?v=202610240135",
+      "./js/theme.js": "./js/theme.js?v=202610240135",
+      "./js/update-check.js": "./js/update-check.js?v=202610240135",
+      "./js/user-settings.js": "./js/user-settings.js?v=202610240135"
     }
   }
   </script>
-  <script type="module" src="js/main.js?v=202610240128"></script>
+  <script type="module" src="js/main.js?v=202610240135"></script>
 </body>
 </html>
