@@ -672,7 +672,8 @@ function renderBulkPopover() {
       btn.textContent = `+${amount}`;
       btn.disabled = targets.length === 0;
       btn.title = targets.length === 0 ? "Todas as personagens já fizeram este voto hoje" : `Somar ${amount} a ${targets.length} personagens`;
-      btn.addEventListener("click", () => bulkVote(kind, amount, targets));
+      // No menu de uma conta aplica logo; no da guild inteira (muitas personagens) continua a pedir confirmação.
+      btn.addEventListener("click", () => bulkVote(kind, amount, targets, { askFirst: !account }));
       group.appendChild(btn);
     }
     section.append(heading, group);
@@ -688,9 +689,13 @@ function renderBulkPopover() {
   placePopover();
 }
 
-async function bulkVote(kind, amount, targets) {
-  const what = kind === "donation" ? "doação" : "participação";
-  if (!confirm(`Somar +${amount} (${what}) a ${targets.length} ${targets.length === 1 ? "personagem" : "personagens"}?\n\nSó recebem as que ainda não fizeram este voto hoje.`)) return;
+async function bulkVote(kind, amount, targets, { askFirst = true } = {}) {
+  if (askFirst) {
+    const what = kind === "donation" ? "doação" : "participação";
+    const noun = targets.length === 1 ? "personagem" : "personagens";
+    const message = `Somar +${amount} (${what}) a ${targets.length} ${noun}?\n\nSó recebem as que ainda não fizeram este voto hoje.`;
+    if (!confirm(message)) return;
+  }
   try {
     const applied = await addMedalsBulk(targets.map((c) => c.id), amount, kind);
     if (popover?.bulk) {
