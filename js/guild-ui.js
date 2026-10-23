@@ -245,12 +245,12 @@ function renderBody() {
   bulkBtn.textContent = "Votar em falta";
   bulkBtn.title = "Aplica um voto a todas as personagens da guild que ainda não o fizeram hoje";
   bulkBtn.addEventListener("click", () => {
-    if (popover?.bulk) {
+    if (popover?.bulk && !popover.accountId) {
       closePopover();
       return;
     }
     const rect = bulkBtn.getBoundingClientRect();
-    popover = { bulk: true, message: "", anchor: { left: rect.left, top: rect.top, bottom: rect.bottom } };
+    popover = { bulk: true, accountId: null, message: "", anchor: { left: rect.left, top: rect.top, bottom: rect.bottom } };
     renderPopover();
   });
   const runBtn = document.createElement("button");
@@ -297,7 +297,8 @@ function buildAccount(account, guildAtLimit) {
   const collapsed = collapsedAccounts.has(account.id);
 
   const block = document.createElement("div");
-  block.className = "guild-account";
+  // Brilho verde na conta quando TODAS as personagens dela já votaram tudo hoje.
+  block.className = "guild-account" + (chars.length > 0 && chars.every(isVoted) ? " voted" : "");
 
   const head = document.createElement("div");
   head.className = "guild-account-head";
@@ -322,6 +323,20 @@ function buildAccount(account, guildAtLimit) {
   addCharBtn.disabled = guildAtLimit;
   addCharBtn.title = guildAtLimit ? `Máximo de ${maxChars()} personagens por guild` : "";
   addCharBtn.addEventListener("click", () => openInputModal("character", account));
+  const voteMissingBtn = document.createElement("button");
+  voteMissingBtn.className = "secondary small guild-vote-all";
+  voteMissingBtn.textContent = "Votar em falta";
+  voteMissingBtn.disabled = chars.length === 0;
+  voteMissingBtn.title = "Aplica um voto a todas as personagens desta conta que ainda não o fizeram hoje";
+  voteMissingBtn.addEventListener("click", () => {
+    if (popover?.bulk && popover.accountId === account.id) {
+      closePopover();
+      return;
+    }
+    const rect = voteMissingBtn.getBoundingClientRect();
+    popover = { bulk: true, accountId: account.id, message: "", anchor: { left: rect.left, top: rect.top, bottom: rect.bottom } };
+    renderPopover();
+  });
   const delAccBtn = document.createElement("button");
   delAccBtn.className = "icon-btn small";
   delAccBtn.textContent = "×";
@@ -334,7 +349,7 @@ function buildAccount(account, guildAtLimit) {
       alert(err.message || "Erro ao apagar a conta.");
     }
   });
-  actions.append(addCharBtn);
+  actions.append(voteMissingBtn, addCharBtn);
   if (editMode) actions.append(delAccBtn);
   head.append(toggle, title, actions);
   block.appendChild(head);
@@ -625,14 +640,19 @@ function renderBulkPopover() {
     closePopover();
     return;
   }
-  const chars = charactersOfGuild(guild.id);
+  const account = popover.accountId ? accounts.find((a) => a.id === popover.accountId) : null;
+  if (popover.accountId && !account) {
+    closePopover();
+    return;
+  }
+  const chars = account ? characters.filter((c) => c.accountId === account.id) : charactersOfGuild(guild.id);
   const missingDonation = chars.filter((c) => usageOf(c).donations < DAILY_LIMITS.donations);
   const missingParticipation = chars.filter((c) => !usageOf(c).participated);
 
   popoverEl.innerHTML = "";
   const title = document.createElement("div");
   title.className = "guild-popover-title";
-  title.textContent = "Votar em falta";
+  title.textContent = account ? `Votar em falta — ${account.name}` : "Votar em falta";
   popoverEl.appendChild(title);
 
   for (const [label, amounts, kind, targets] of [

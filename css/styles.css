@@ -1581,3 +1581,9 @@ fieldset legend {
   background: var(--success);
   box-shadow: 0 0 8px rgba(77, 214, 138, 0.6);
 }
+
+/* Conta em que todas as personagens já votaram tudo hoje: brilho verde à volta do bloco. */
+.guild-account.voted {
+  border-color: var(--success);
+  box-shadow: 0 0 0 1px rgba(77, 214, 138, 0.3), 0 0 18px rgba(77, 214, 138, 0.28);
+}
