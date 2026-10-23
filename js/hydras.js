@@ -30,7 +30,7 @@ function clampChests(value) {
 
 // Junta uma hidra (com `chests` cofres) à lista do dia.
 export function addHydra(uid, date, chests) {
-  const value = chests === null ? null : clampChests(chests);
+  const value = clampChests(chests);
   const ref = dayRef(uid, date);
   return runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
@@ -43,7 +43,7 @@ export function addHydra(uid, date, chests) {
 
 // Altera os cofres de uma hidra do dia (0 é válido); com null (campo vazio) a hidra é removida.
 export function setHydra(uid, date, index, chests) {
-  const value = clampChests(chests);
+  const value = chests === null ? null : clampChests(chests);
   const ref = dayRef(uid, date);
   return runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
