@@ -9,8 +9,8 @@ import { MAX_CHESTS_PER_HYDRA, QUICK_CHESTS, dateKey, dayTotals, formatNumber } 
 
 export const HYDRA_MINUTES = 20;
 const DURATION_MS = HYDRA_MINUTES * 60 * 1000;
-// Aviso (3 beeps) aos 17:20 de contagem, ou seja, quando faltam 2:40.
-const WARN_AT_MS = (17 * 60 + 20) * 1000;
+// Aviso (3 beeps) quando ainda faltam 17:20 no cronómetro.
+const WARN_REMAINING_MS = (17 * 60 + 20) * 1000;
 const VOICE_URL = "assets/sounds/hydra-available.mp3";
 
 const displayEl = document.getElementById("hydra-timer-display");
@@ -162,7 +162,7 @@ function tick() {
     finishTimer(true);
     return;
   }
-  if (Date.now() >= state.endAt - (DURATION_MS - WARN_AT_MS) && warnedFor !== state.endAt) {
+  if (Date.now() >= state.endAt - WARN_REMAINING_MS && warnedFor !== state.endAt) {
     warnedFor = state.endAt;
     if (soundOn()) playWarning();
   }
@@ -293,8 +293,8 @@ export function startHydraTimer(user) {
     state = { phase: "ready", endAt: 0, marked: null, needsMark: state.marked === null, available: true };
     saveState();
   }
-  // Ao abrir a página já depois dos 17:20, não repete o aviso.
-  if (state.phase === "running" && Date.now() >= state.endAt - (DURATION_MS - WARN_AT_MS)) warnedFor = state.endAt;
+  // Ao abrir a página quando já faltam menos de 17:20, não repete o aviso.
+  if (state.phase === "running" && Date.now() >= state.endAt - WARN_REMAINING_MS) warnedFor = state.endAt;
   render();
   tickTimer = setInterval(tick, 250);
   const unsubscribe = subscribeToHydraDays(user.uid, (days) => {
