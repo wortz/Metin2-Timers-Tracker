@@ -4,6 +4,7 @@ import {
   setCharacterLv70,
   addGuildRun,
   addMedalsBulk,
+  addDefaultVoteBulk,
   setItemCount,
   undoGuildRun,
   createGuild,
@@ -25,6 +26,7 @@ import {
 import {
   DAILY_LIMITS,
   DEFAULT_GUILD_LEVEL,
+  DEFAULT_VOTE,
   GUILD_RUNS,
   ITEM_GROUPS,
   itemCount,
@@ -270,7 +272,22 @@ function renderBody() {
     }
     render();
   });
-  actions.append(bulkBtn, runBtn, addAccountBtn, itemsBtn);
+  // Recolhe todas as contas de uma vez (ou expande-as, se já estiverem todas recolhidas).
+  const guildAccountIds = accountsOf(guild.id).map((a) => a.id);
+  const allCollapsed = guildAccountIds.length > 0 && guildAccountIds.every((id) => collapsedAccounts.has(id));
+  const collapseBtn = document.createElement("button");
+  collapseBtn.className = "secondary";
+  collapseBtn.textContent = allCollapsed ? "Expandir contas" : "Recolher contas";
+  collapseBtn.disabled = guildAccountIds.length === 0;
+  collapseBtn.title = allCollapsed ? "Mostra as personagens de todas as contas" : "Esconde as personagens de todas as contas";
+  collapseBtn.addEventListener("click", () => {
+    for (const id of guildAccountIds) {
+      if (allCollapsed) collapsedAccounts.delete(id);
+      else collapsedAccounts.add(id);
+    }
+    render();
+  });
+  actions.append(bulkBtn, runBtn, addAccountBtn, itemsBtn, collapseBtn);
   if (editMode) actions.append(delGuildBtn);
   actions.append(editBtn);
   header.appendChild(actions);
@@ -655,6 +672,28 @@ function renderBulkPopover() {
   title.textContent = account ? `Votar em falta — ${account.name}` : "Votar em falta";
   popoverEl.appendChild(title);
 
+  // Voto padrão: preenche de uma vez o que falta (as doações em falta a +3 e a participação a +13).
+  const missingAny = chars.filter((c) => {
+    const usage = usageOf(c);
+    return usage.donations < DAILY_LIMITS.donations || !usage.participated;
+  });
+  const defaultSection = document.createElement("div");
+  defaultSection.className = "guild-popover-group";
+  const defaultHeading = document.createElement("span");
+  defaultHeading.className = "guild-popover-label";
+  defaultHeading.textContent = `Voto padrão — faltam ${missingAny.length} de ${chars.length}`;
+  const defaultBtn = document.createElement("button");
+  defaultBtn.className = "guild-default-vote";
+  defaultBtn.textContent = `${DAILY_LIMITS.donations} × +${DEFAULT_VOTE.donationAmount} e +${DEFAULT_VOTE.participationAmount}`;
+  defaultBtn.disabled = missingAny.length === 0;
+  defaultBtn.title =
+    missingAny.length === 0
+      ? "Todas as personagens já votaram tudo hoje"
+      : `Dá a cada uma as doações que lhe faltam (+${DEFAULT_VOTE.donationAmount} cada, até ${DAILY_LIMITS.donations}) e a participação de +${DEFAULT_VOTE.participationAmount}`;
+  defaultBtn.addEventListener("click", () => defaultVote(missingAny, { askFirst: !account }));
+  defaultSection.append(defaultHeading, defaultBtn);
+  popoverEl.appendChild(defaultSection);
+
   for (const [label, amounts, kind, targets] of [
     ["Doações", MEDAL_BUTTONS.donations, "donation", missingDonation],
     ["Participação", MEDAL_BUTTONS.participation, "participation", missingParticipation],
@@ -687,6 +726,24 @@ function renderBulkPopover() {
     popoverEl.appendChild(note);
   }
   placePopover();
+}
+
+// Voto padrão (3 × +3 e +13) nas personagens a que ainda falta algo.
+async function defaultVote(targets, { askFirst = true } = {}) {
+  const noun = targets.length === 1 ? "personagem" : "personagens";
+  if (askFirst) {
+    const message = `Aplicar o voto padrão (doações em falta a +${DEFAULT_VOTE.donationAmount} e participação de +${DEFAULT_VOTE.participationAmount}) a ${targets.length} ${noun}?`;
+    if (!confirm(message)) return;
+  }
+  try {
+    const applied = await addDefaultVoteBulk(targets.map((c) => c.id));
+    if (popover?.bulk) {
+      popover.message = `✓ Voto padrão aplicado a ${applied} ${applied === 1 ? "personagem" : "personagens"}.`;
+      renderPopover();
+    }
+  } catch (err) {
+    alert(err.message || "Erro ao votar.");
+  }
 }
 
 async function bulkVote(kind, amount, targets, { askFirst = true } = {}) {

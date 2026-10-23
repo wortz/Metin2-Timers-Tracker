@@ -15,6 +15,7 @@ import {
 import { db, snapshotError } from "./firebase-init.js";
 import {
   DAILY_LIMITS,
+  DEFAULT_VOTE,
   DEFAULT_GUILD_LEVEL,
   GUILD_RUNS,
   ITEM_GROUPS,
@@ -151,6 +152,36 @@ export function addMedalsBulk(characterIds, amount, kind) {
         usageDay: key,
         donations,
         participated,
+      });
+      applied++;
+    });
+    return applied;
+  });
+}
+
+// Voto padrão em várias personagens, numa só transação: a cada uma dá as doações que ainda lhe
+// faltam hoje (+3 cada, até às 3) e a participação (+13) se ainda não participou. Cada personagem
+// é verificada outra vez lá dentro; as que já têm tudo são saltadas. Devolve quantas receberam algo.
+export function addDefaultVoteBulk(characterIds) {
+  const refs = characterIds.map((id) => doc(db, "guildCharacters", id));
+  const key = periodKey();
+  return runTransaction(db, async (tx) => {
+    const snaps = await Promise.all(refs.map((ref) => tx.get(ref)));
+    let applied = 0;
+    snaps.forEach((snap, i) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const sameDay = data.usageDay === key;
+      const donations = sameDay ? data.donations || 0 : 0;
+      const participated = sameDay ? !!data.participated : false;
+      const missingDonations = Math.max(0, DAILY_LIMITS.donations - donations);
+      const gain = missingDonations * DEFAULT_VOTE.donationAmount + (participated ? 0 : DEFAULT_VOTE.participationAmount);
+      if (missingDonations === 0 && participated) return;
+      tx.update(refs[i], {
+        medals: Math.min(MAX_MEDALS, (data.medals || 0) + gain),
+        usageDay: key,
+        donations: DAILY_LIMITS.donations,
+        participated: true,
       });
       applied++;
     });

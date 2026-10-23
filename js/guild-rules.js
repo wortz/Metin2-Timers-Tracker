@@ -7,6 +7,13 @@ export const DAILY_LIMITS = {
   participation: 1,
 };
 
+// "Voto padrão": o que se vota normalmente num dia. Preenche o que falta a cada personagem:
+// as doações em falta (até 3) a +3 cada e, se ainda não participou, a participação de +13.
+export const DEFAULT_VOTE = {
+  donationAmount: 3,
+  participationAmount: 13,
+};
+
 const RESET_HOUR_PRAGUE = 4;
 
 // Identifica o "dia de doações" atual (por exemplo "2026-10-21"). Muda às 04:00 de Praga.

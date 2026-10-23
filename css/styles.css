@@ -1587,3 +1587,15 @@ fieldset legend {
   border-color: var(--success);
   box-shadow: 0 0 0 1px rgba(77, 214, 138, 0.3), 0 0 18px rgba(77, 214, 138, 0.28);
 }
+
+/* Botão do voto padrão (3 × +3 e +13) */
+.guild-default-vote {
+  align-self: flex-start;
+  padding: 5px 14px;
+  font-size: 13px;
+}
+
+.guild-default-vote:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
