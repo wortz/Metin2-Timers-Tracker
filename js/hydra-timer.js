@@ -9,6 +9,9 @@ import { MAX_CHESTS_PER_HYDRA, QUICK_CHESTS, dateKey, dayTotals, formatNumber } 
 
 export const HYDRA_MINUTES = 20;
 const DURATION_MS = HYDRA_MINUTES * 60 * 1000;
+// Aviso (3 beeps) aos 17:20 de contagem, ou seja, quando faltam 2:40.
+const WARN_AT_MS = (17 * 60 + 20) * 1000;
+const VOICE_URL = "assets/sounds/hydra-available.mp3";
 
 const displayEl = document.getElementById("hydra-timer-display");
 const statusEl = document.getElementById("hydra-timer-status");
@@ -25,6 +28,7 @@ let ownerUid = null;
 let state = { phase: "ready", endAt: 0, marked: null, needsMark: false, available: false };
 let tickTimer = null;
 let audioCtx = null;
+let warnedFor = 0; // endAt da contagem que já deu o aviso
 let todayDays = [];
 
 const storageKey = () => `hydraTimer:${ownerUid}`;
@@ -84,7 +88,7 @@ function tone(freq, start, length, volume = 0.25) {
   osc.stop(audioCtx.currentTime + start + length + 0.05);
 }
 
-// "Hidra Available": um toque ascendente (dó–mi–sol–dó) duas vezes e a voz a dizer "Hidra disponível".
+// "Hidra Available": um toque ascendente (dó–mi–sol–dó), repetido duas vezes.
 function playHydraAvailable() {
   unlockAudio();
   if (audioCtx) {
@@ -93,14 +97,18 @@ function playHydraAvailable() {
       notes.forEach((freq, i) => tone(freq, round * 0.9 + i * 0.16, round === 1 && i === 3 ? 0.6 : 0.22));
     }
   }
-  try {
-    const utterance = new SpeechSynthesisUtterance("Hidra disponível");
-    utterance.lang = "pt-PT";
-    utterance.rate = 0.95;
-    setTimeout(() => window.speechSynthesis.speak(utterance), 1900);
-  } catch {
-    // sem síntese de voz: fica só o toque
-  }
+  // Depois do toque, a voz "Hydra available" (se o ficheiro faltar, fica só o toque).
+  setTimeout(() => {
+    const voice = new Audio(VOICE_URL);
+    voice.play().catch(() => {});
+  }, 1900);
+}
+
+// Três beeps curtos de aviso.
+function playWarning() {
+  unlockAudio();
+  if (!audioCtx) return;
+  for (let i = 0; i < 3; i++) tone(880, i * 0.25, 0.15);
 }
 
 // ---------- Estado ----------
@@ -153,6 +161,10 @@ function tick() {
   if (Date.now() >= state.endAt) {
     finishTimer(true);
     return;
+  }
+  if (Date.now() >= state.endAt - (DURATION_MS - WARN_AT_MS) && warnedFor !== state.endAt) {
+    warnedFor = state.endAt;
+    if (soundOn()) playWarning();
   }
   renderTime();
 }
@@ -281,6 +293,8 @@ export function startHydraTimer(user) {
     state = { phase: "ready", endAt: 0, marked: null, needsMark: state.marked === null, available: true };
     saveState();
   }
+  // Ao abrir a página já depois dos 17:20, não repete o aviso.
+  if (state.phase === "running" && Date.now() >= state.endAt - (DURATION_MS - WARN_AT_MS)) warnedFor = state.endAt;
   render();
   tickTimer = setInterval(tick, 250);
   const unsubscribe = subscribeToHydraDays(user.uid, (days) => {
