@@ -21,7 +21,7 @@ export const HYDRA_MINUTES = 20;
 const DURATION_MS = HYDRA_MINUTES * 60 * 1000;
 // Aviso (3 beeps) quando ainda faltam 17:20 no cronómetro.
 const WARN_REMAINING_MS = (17 * 60 + 20) * 1000;
-const VOICE_URL = "assets/sounds/hydra-available.mp3";
+const VOICE_URL = "assets/sounds/hydra-alert.mp3";
 const WARNING_URL = "assets/sounds/hydra-warning.mp3";
 
 const listEl = document.getElementById("hydra-timer-list");
