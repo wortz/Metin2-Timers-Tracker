@@ -151,13 +151,28 @@ function syncSchedule() {
     const toCtx = (ms) => audioCtx.currentTime + (ms - now) / 1000;
     if (timer.endAt - WARN_REMAINING_MS > now) scheduleWarning(toCtx(timer.endAt - WARN_REMAINING_MS), warnGain, nodes);
     scheduleAlert(toCtx(timer.endAt), alertGain, nodes);
-    scheduled.set(timer.id, { endAt: timer.endAt, nodes });
+    scheduled.set(timer.id, { endAt: timer.endAt, nodes, offset: audioCtx.currentTime - now / 1000 });
   }
   for (const [id, done] of scheduled) {
     if (live.has(id)) continue;
     // Se o tempo já acabou, o alerta está a tocar: deixa-o. Se foi cancelado antes, silencia.
     if (done.endAt > now) for (const node of done.nodes) node.stop();
     scheduled.delete(id);
+  }
+}
+
+// O relógio do áudio pode descompassar-se do relógio normal (contexto suspenso, computador a dormir,
+// etc.): se for o caso, os sons agendados são refeitos com a hora certa.
+function checkAudioDrift() {
+  if (!audioCtx || audioCtx.state !== "running" || scheduled.size === 0) return;
+  const offset = audioCtx.currentTime - Date.now() / 1000;
+  for (const done of scheduled.values()) {
+    if (Math.abs(offset - done.offset) > 1) {
+      for (const d of scheduled.values()) for (const node of d.nodes) node.stop();
+      scheduled.clear();
+      syncSchedule();
+      return;
+    }
   }
 }
 
@@ -244,6 +259,7 @@ function tick() {
     renderToday();
   }
   if (!timerLoaded) return;
+  checkAudioDrift();
   const now = Date.now();
   for (const timer of timers) {
     if (timer.phase !== "running") continue;
