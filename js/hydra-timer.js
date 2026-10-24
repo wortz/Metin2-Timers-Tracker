@@ -1,4 +1,4 @@
-import { addHydra, setHydra, subscribeToHydraDays, mutateHydraTimers, subscribeToHydraTimer } from "./hydras.js";
+import { addHydra, setHydra, subscribeToRecentHydraDays } from "./hydras.js";
 import {
   MAX_CHESTS_PER_HYDRA,
   MAX_TIMERS,
@@ -14,8 +14,8 @@ import {
 //   Começar → corre o cronómetro e aparecem os botões 0–5 (cofres recebidos nesta hidra).
 //   Ao chegar a 0 toca um som, volta a 20:00 e fica parado; só se começa de novo depois de marcar
 //   os cofres recebidos (se já os marcaste durante a contagem, basta carregar em Começar).
-// Todos os cronómetros adicionam ao mesmo histórico de hoje. O estado fica no Firestore (por
-// utilizador), por isso é o mesmo em todos os dispositivos.
+// Todos os cronómetros adicionam ao mesmo histórico de hoje. O estado fica guardado em cada browser
+// (localStorage, por utilizador): não é partilhado entre dispositivos.
 
 export const HYDRA_MINUTES = 20;
 const DURATION_MS = HYDRA_MINUTES * 60 * 1000;
@@ -34,7 +34,25 @@ const soundTestBtn = document.getElementById("hydra-timer-sound-test");
 
 let ownerUid = null;
 let timers = normalizeTimers(null);
-let timerLoaded = false; // só se pode mexer depois de ler o estado guardado
+let timerLoaded = false; // só depois de ler o estado guardado
+
+const storageKey = () => `hydraTimers:${ownerUid}`;
+
+function loadTimers() {
+  try {
+    return normalizeTimers(JSON.parse(localStorage.getItem(storageKey()) || "null"));
+  } catch {
+    return normalizeTimers(null);
+  }
+}
+
+function saveTimers() {
+  try {
+    localStorage.setItem(storageKey(), JSON.stringify({ timers }));
+  } catch {
+    // sem localStorage: os timers só vivem enquanto a página estiver aberta
+  }
+}
 let tickTimer = null;
 let audioCtx = null;
 const warnedFor = new Map(); // id do timer -> endAt da contagem que já deu o aviso
@@ -188,11 +206,11 @@ for (const type of ["pointerdown", "keydown", "touchstart"]) {
 // ---------- Estado ----------
 const timerById = (id) => timers.find((t) => t.id === id);
 
-// Aplica a mudança já no ecrã e depois guarda-a (a mesma função corre sobre a lista guardada).
+// Aplica a mudança, guarda-a neste browser e redesenha.
 function change(fn) {
   timers = fn(timers);
+  saveTimers();
   render();
-  mutateHydraTimers(ownerUid, fn).catch((err) => console.error("Erro a guardar o cronómetro:", err));
 }
 
 const mapTimer = (id, update) => (list) => list.map((t) => (t.id === id ? update(t) : t));
@@ -460,46 +478,49 @@ addTimerBtn.addEventListener("click", addTimer);
 
 export function startHydraTimer(user) {
   ownerUid = user.uid;
-  timerLoaded = false;
-  timers = normalizeTimers(null);
+  timers = loadTimers();
   warnedFor.clear();
-  let firstSnapshot = true;
+  const now = Date.now();
+  // Timers que acabaram enquanto a página estava fechada passam a "prontos" sem tocar.
+  if (timers.some((t) => t.phase === "running" && now >= t.endAt)) {
+    timers = timers.map((t) =>
+      t.phase === "running" && now >= t.endAt
+        ? { ...t, phase: "ready", endAt: 0, marked: null, needsMark: t.marked === null, available: true }
+        : t
+    );
+    saveTimers();
+  }
+  // Ao abrir a página quando já faltam menos de 17:20, não repete o aviso.
+  for (const t of timers) {
+    if (t.phase === "running" && now >= t.endAt - WARN_REMAINING_MS) warnedFor.set(t.id, t.endAt);
+  }
+  timerLoaded = true;
   render();
   tickTimer = setInterval(tick, 250);
-  const unsubscribeTimer = subscribeToHydraTimer(user.uid, (saved) => {
-    timers = normalizeTimers(saved);
-    const now = Date.now();
-    // Timers que acabaram enquanto não havia nenhuma página aberta passam a "prontos" sem tocar.
-    if (timers.some((t) => t.phase === "running" && now >= t.endAt)) {
-      const expire = (list) =>
-        list.map((t) =>
-          t.phase === "running" && now >= t.endAt
-            ? { ...t, phase: "ready", endAt: 0, marked: null, needsMark: t.marked === null, available: true }
-            : t
-        );
-      timers = expire(timers);
-      mutateHydraTimers(ownerUid, expire).catch((err) => console.error("Erro a guardar o cronómetro:", err));
-    }
-    // Ao abrir a página quando já faltam menos de 17:20, não repete o aviso.
-    if (firstSnapshot) {
-      for (const t of timers) {
-        if (t.phase === "running" && now >= t.endAt - WARN_REMAINING_MS) warnedFor.set(t.id, t.endAt);
-      }
-    }
-    firstSnapshot = false;
-    timerLoaded = true;
+
+  // Outro separador do mesmo browser pode ter mudado os timers.
+  const onStorage = (e) => {
+    if (e.key !== storageKey()) return;
+    timers = loadTimers();
     render();
-  });
-  const unsubscribe = subscribeToHydraDays(user.uid, (days) => {
-    todayDays = days;
-    renderToday();
-  });
+  };
+  window.addEventListener("storage", onStorage);
+
+  const unsubscribe = subscribeToRecentHydraDays(
+    user.uid,
+    (days) => {
+      todayDays = days;
+      renderToday();
+    },
+    1 // só interessa o dia de hoje
+  );
   return () => {
     clearInterval(tickTimer);
+    window.removeEventListener("storage", onStorage);
     const badge = document.querySelector('.nav-item[data-page="fazer-hidra"] .nav-badge');
     if (badge) badge.hidden = true;
     unsubscribe();
-    unsubscribeTimer();
+    timerLoaded = false;
     ownerUid = null;
     todayDays = [];
   };

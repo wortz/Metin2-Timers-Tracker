@@ -140,6 +140,23 @@ const discordLoginBtn = document.getElementById("discord-login-btn");
 
 // ---------- State ----------
 let unsubscribers = [];
+
+// Guild e histórico das Hidras só ligam ao Firestore quando se abre a página pela primeira vez
+// (e ficam ligados até sair), para a app gastar menos leituras e ligações ao abrir.
+let lazyUser = null;
+const lazyStarted = new Set();
+
+function ensurePageData(page) {
+  if (!lazyUser || lazyStarted.has(page)) return;
+  const user = lazyUser;
+  const starters = {
+    guild: () => startGuild(user, () => userLimits()),
+    hidras: () => startHydras(user),
+  };
+  if (!starters[page]) return;
+  lazyStarted.add(page);
+  unsubscribers.push(starters[page]());
+}
 // Trajes e pets têm dados separados, mas ambos ficam sempre subscritos (para as
 // notificações funcionarem nos dois). As variáveis latest* abaixo espelham o
 // sistema que está aberto no momento (currentKind).
@@ -229,9 +246,10 @@ onAuthChange((user, err) => {
     )
   );
 
-  unsubscribers.push(startGuild(user, () => userLimits()));
-  unsubscribers.push(startHydras(user));
   unsubscribers.push(startHydraTimer(user));
+  lazyUser = user;
+  lazyStarted.clear();
+  ensurePageData(currentPage); // se a página guardada no cookie for a Guild ou o histórico
 
   unsubscribers.push(
     subscribeToRegistration(user.uid, (registration) => {
@@ -291,6 +309,8 @@ function syncCurrentKind() {
 function cleanupSubscriptions() {
   for (const unsub of unsubscribers) unsub();
   unsubscribers = [];
+  lazyUser = null;
+  lazyStarted.clear();
   for (const kind of Object.keys(store)) store[kind] = { items: [], sections: [], characters: [] };
   syncCurrentKind();
   latestUsers = [];
@@ -359,6 +379,7 @@ function closeSidebar() {
 function navigate(page) {
   if (!PAGES.includes(page) || (page === "admin" && !isAdmin())) page = "costume";
   currentPage = page;
+  ensurePageData(page);
 
   const isList = page === "costume" || page === "pet";
   if (isList) {

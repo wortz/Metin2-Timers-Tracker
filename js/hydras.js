@@ -12,7 +12,7 @@ import {
   writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { db, snapshotError } from "./firebase-init.js";
-import { DEFAULT_PRICE, MAX_CHESTS_PER_HYDRA, MAX_HYDRAS_PER_DAY, normalizeTimers, totalsOfOldDays } from "./hydras-rules.js";
+import { DEFAULT_PRICE, MAX_CHESTS_PER_HYDRA, MAX_HYDRAS_PER_DAY, addDays, dateKey, totalsOfOldDays } from "./hydras-rules.js";
 
 // Registo de Hidras (por utilizador). Três coleções do Firestore:
 //   hydraDays      { ownerUid, date: "2026-10-23", hydras: [3, 4, ...], price?: 45 }   id: {uid}__{date}
@@ -55,26 +55,6 @@ export function setHydra(uid, date, index, chests) {
   });
 }
 
-// Estado do cronómetro "Fazer Hidra" (partilhado entre os dispositivos do mesmo utilizador).
-// A lista é alterada numa transação (a função recebe a lista guardada e devolve a nova), para dois
-// dispositivos não se pisarem.
-export function mutateHydraTimers(uid, fn) {
-  const ref = doc(db, "hydraTimers", uid);
-  return runTransaction(db, async (tx) => {
-    const snap = await tx.get(ref);
-    const timers = fn(normalizeTimers(snap.exists() ? snap.data() : null));
-    tx.set(ref, { timers, updatedAt: Date.now() });
-  });
-}
-
-export function subscribeToHydraTimer(uid, onChange) {
-  return onSnapshot(
-    doc(db, "hydraTimers", uid),
-    (snap) => onChange(snap.exists() ? snap.data() : null),
-    snapshotError("hydraTimers")
-  );
-}
-
 // Preço de um cofre nesse dia; null apaga-o (o dia volta a usar o preço padrão).
 export function setDayPrice(uid, date, price) {
   return setDoc(
@@ -93,9 +73,85 @@ export function setMonthDefaultPrice(uid, month, price) {
   );
 }
 
-export function subscribeToHydraDays(uid, onChange) {
-  const q = query(collection(db, "hydraDays"), where("ownerUid", "==", uid));
-  return onSnapshot(q, (snap) => onChange(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), snapshotError("hydraDays"));
+// Dias "vivos": hoje e os 3 anteriores (as hidras editam-se hoje e ontem, o preço até anteontem,
+// e fica 1 dia de folga). Cada um é um documento ouvido à parte, por isso só se lê o que muda.
+export const LIVE_DAYS = 4;
+
+// Primeira data (inclusive) dos dias vivos.
+export const liveStartKey = (now = new Date()) => addDays(dateKey(now), -(LIVE_DAYS - 1));
+
+// Ouve os últimos `count` dias; passada a meia-noite refaz as ligações para o dia novo.
+export function subscribeToRecentHydraDays(uid, onChange, count = LIVE_DAYS) {
+  let unsubs = [];
+  let builtFor = null;
+  const stop = () => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
+  };
+  const build = () => {
+    stop();
+    builtFor = dateKey();
+    const found = new Map();
+    let loaded = 0;
+    const keys = Array.from({ length: count }, (_, i) => addDays(builtFor, -i));
+    for (const key of keys) {
+      let first = true;
+      unsubs.push(
+        onSnapshot(
+          dayRef(uid, key),
+          (snap) => {
+            if (snap.exists()) found.set(key, { id: snap.id, ...snap.data() });
+            else found.delete(key);
+            if (first) {
+              first = false;
+              loaded += 1;
+            }
+            if (loaded === keys.length) onChange([...found.values()]);
+          },
+          snapshotError("hydraDays")
+        )
+      );
+    }
+  };
+  build();
+  const watcher = setInterval(() => {
+    if (dateKey() !== builtFor) build();
+  }, 30000);
+  return () => {
+    clearInterval(watcher);
+    stop();
+  };
+}
+
+// Dias mais antigos que a janela dos dias vivos: já não mudam, por isso ficam em cache neste
+// browser e só se voltam a ler uma vez por dia (ou depois de importar/apagar/compactar).
+const olderCacheKey = (uid) => `hydraOlder:${uid}`;
+
+export function invalidateOlderHydraDays(uid) {
+  try {
+    localStorage.removeItem(olderCacheKey(uid));
+  } catch {
+    // sem localStorage: não há cache para limpar
+  }
+}
+
+export async function loadOlderHydraDays(uid) {
+  const today = dateKey();
+  const start = liveStartKey();
+  try {
+    const cached = JSON.parse(localStorage.getItem(olderCacheKey(uid)) || "null");
+    if (cached && cached.savedOn === today && Array.isArray(cached.days)) return cached.days.filter((d) => d.date < start);
+  } catch {
+    // cache ilegível: lê do Firestore
+  }
+  const snap = await getDocs(query(collection(db, "hydraDays"), where("ownerUid", "==", uid)));
+  const days = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((d) => d.date < start);
+  try {
+    localStorage.setItem(olderCacheKey(uid), JSON.stringify({ savedOn: today, days }));
+  } catch {
+    // sem localStorage: volta a ler da próxima vez
+  }
+  return days;
 }
 
 export function subscribeToHydraMonths(uid, onChange) {

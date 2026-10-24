@@ -3,7 +3,9 @@ import {
   setHydra,
   setDayPrice,
   setMonthDefaultPrice,
-  subscribeToHydraDays,
+  subscribeToRecentHydraDays,
+  loadOlderHydraDays,
+  invalidateOlderHydraDays,
   subscribeToHydraMonths,
   subscribeToHydraSettings,
   compactOldDays,
@@ -49,6 +51,9 @@ function shownMonth() {
 
 let ownerUid = null;
 let days = [];
+let recentDays = []; // dias vivos (ligação em tempo real)
+let olderDays = []; // dias antigos (em cache, ver hydras.js)
+let refreshOlder = () => {};
 let months = [];
 let settings = { monthlyDefaults: {}, base: DEFAULT_PRICE };
 let tab = "current"; // "current" | "previous" | "older"
@@ -307,6 +312,8 @@ document.getElementById("hydra-import-btn").addEventListener("click", async () =
   if (!confirm(`Importar ${parsed.length} dia(s)? As hidras desses dias vão ser substituídas.`)) return;
   try {
     await importDays(ownerUid, parsed);
+    invalidateOlderHydraDays(ownerUid);
+    refreshOlder();
     textEl.value = "";
     importModal.close();
   } catch (err) {
@@ -318,6 +325,8 @@ document.getElementById("hydra-delete-all-btn").addEventListener("click", async 
   if (!confirm("Apagar TODAS as tuas hidras (dias e totais dos meses)? Não dá para desfazer.")) return;
   try {
     await deleteAllHydraData(ownerUid);
+    invalidateOlderHydraDays(ownerUid);
+    refreshOlder();
   } catch (err) {
     alert(err.message || "Erro ao apagar.");
   }
@@ -356,15 +365,42 @@ export function startHydras(user) {
   const maybeCompact = () => {
     if (compacted || !daysLoaded || !settingsLoaded) return;
     compacted = true;
-    compactOldDays(ownerUid, days, defaultFor, cutoffKey()).catch((err) => console.error("Erro a compactar hidras antigas:", err));
+    compactOldDays(ownerUid, days, defaultFor, cutoffKey())
+      .then(() => {
+        // Os dias compactados já não existem: refaz a cache dos dias antigos.
+        invalidateOlderHydraDays(ownerUid);
+        refreshOlder();
+      })
+      .catch((err) => console.error("Erro a compactar hidras antigas:", err));
   };
 
+  // Junta os dias antigos (cache) e os vivos (tempo real); os vivos mandam.
+  let olderLoaded = false;
+  let recentLoaded = false;
+  const mergeDays = () => {
+    const byDate = new Map(olderDays.map((d) => [d.date, d]));
+    for (const d of recentDays) byDate.set(d.date, d);
+    days = [...byDate.values()];
+    daysLoaded = olderLoaded && recentLoaded;
+    render();
+    maybeCompact();
+  };
+  refreshOlder = () => {
+    loadOlderHydraDays(user.uid)
+      .then((items) => {
+        olderDays = items;
+        olderLoaded = true;
+        mergeDays();
+      })
+      .catch((err) => console.error("Erro a ler os dias antigos das hidras:", err));
+  };
+  refreshOlder();
+
   const unsubs = [
-    subscribeToHydraDays(user.uid, (items) => {
-      days = items;
-      daysLoaded = true;
-      render();
-      maybeCompact();
+    subscribeToRecentHydraDays(user.uid, (items) => {
+      recentDays = items;
+      recentLoaded = true;
+      mergeDays();
     }),
     subscribeToHydraMonths(user.uid, (items) => {
       months = items;
@@ -385,6 +421,9 @@ export function startHydras(user) {
     if (dateKey() !== lastDay) {
       lastDay = dateKey();
       ensureCurrentMonthDefault();
+      // O dia que saiu da janela dos dias vivos passa a ser "antigo": refaz a cache.
+      invalidateOlderHydraDays(ownerUid);
+      refreshOlder();
       render();
     }
   }, 30000);
@@ -393,6 +432,9 @@ export function startHydras(user) {
     clearInterval(dayWatcher);
     unsubs.forEach((u) => u());
     days = [];
+    recentDays = [];
+    olderDays = [];
+    refreshOlder = () => {};
     months = [];
     settings = { monthlyDefaults: {}, base: DEFAULT_PRICE };
     daysLoaded = settingsLoaded = compacted = false;
