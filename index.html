@@ -6,7 +6,7 @@
 <title>Metin2 Timers Tracker</title>
 <link rel="icon" type="image/png" href="assets/icons/favicon.png" />
 <script>try{var t=localStorage.getItem("theme");if(t&&t!=="roxo")document.documentElement.dataset.theme=t}catch(e){}</script>
-<link rel="stylesheet" href="css/styles.css?v=202610240149" />
+<link rel="stylesheet" href="css/styles.css?v=202610240203" />
 </head>
 <body>
 
@@ -97,13 +97,11 @@
           <h2>Fazer Hidra</h2>
           <button type="button" class="secondary" data-goto-page="hidras">Histórico</button>
           <label class="hydra-default-label">Som <input id="hydra-timer-sound" type="checkbox" class="toggle-switch" checked /></label>
+          <label class="hydra-default-label" title="Aviso quando ainda faltam 17:20">Aviso <input id="hydra-timer-warn" type="checkbox" class="toggle-switch" checked /></label>
           <button id="hydra-timer-sound-test" type="button" class="secondary">Testar som</button>
         </div>
-        <div class="hydra-timer-card">
-          <div id="hydra-timer-display" class="hydra-timer-display">20:00</div>
-          <p id="hydra-timer-status" class="hydra-timer-status"></p>
-          <div id="hydra-timer-actions" class="hydra-timer-actions"></div>
-        </div>
+        <div id="hydra-timer-list" class="hydra-timer-list"></div>
+        <button id="hydra-timer-add" type="button" class="secondary hydra-timer-add">+ Adicionar timer</button>
         <div class="hydra-today-card">
           <h3>Hoje</h3>
           <p id="hydra-timer-today" class="dm-delay-hint"></p>
@@ -480,34 +478,34 @@
   <script type="importmap">
   {
     "imports": {
-      "./js/admin.js": "./js/admin.js?v=202610240149",
-      "./js/auth.js": "./js/auth.js?v=202610240149",
-      "./js/bio-ui.js": "./js/bio-ui.js?v=202610240149",
-      "./js/bio.js": "./js/bio.js?v=202610240149",
-      "./js/characters.js": "./js/characters.js?v=202610240149",
-      "./js/costumes.js": "./js/costumes.js?v=202610240149",
-      "./js/firebase-config.js": "./js/firebase-config.js?v=202610240149",
-      "./js/firebase-init.js": "./js/firebase-init.js?v=202610240149",
-      "./js/guild-rules.js": "./js/guild-rules.js?v=202610240149",
-      "./js/guild-ui.js": "./js/guild-ui.js?v=202610240149",
-      "./js/guild.js": "./js/guild.js?v=202610240149",
-      "./js/hydra-timer.js": "./js/hydra-timer.js?v=202610240149",
-      "./js/hydras-rules.js": "./js/hydras-rules.js?v=202610240149",
-      "./js/hydras-ui.js": "./js/hydras-ui.js?v=202610240149",
-      "./js/hydras.js": "./js/hydras.js?v=202610240149",
-      "./js/kinds.js": "./js/kinds.js?v=202610240149",
-      "./js/limits.js": "./js/limits.js?v=202610240149",
-      "./js/main.js": "./js/main.js?v=202610240149",
-      "./js/notifications.js": "./js/notifications.js?v=202610240149",
-      "./js/registrations.js": "./js/registrations.js?v=202610240149",
-      "./js/sections.js": "./js/sections.js?v=202610240149",
-      "./js/settings.js": "./js/settings.js?v=202610240149",
-      "./js/theme.js": "./js/theme.js?v=202610240149",
-      "./js/update-check.js": "./js/update-check.js?v=202610240149",
-      "./js/user-settings.js": "./js/user-settings.js?v=202610240149"
+      "./js/admin.js": "./js/admin.js?v=202610240203",
+      "./js/auth.js": "./js/auth.js?v=202610240203",
+      "./js/bio-ui.js": "./js/bio-ui.js?v=202610240203",
+      "./js/bio.js": "./js/bio.js?v=202610240203",
+      "./js/characters.js": "./js/characters.js?v=202610240203",
+      "./js/costumes.js": "./js/costumes.js?v=202610240203",
+      "./js/firebase-config.js": "./js/firebase-config.js?v=202610240203",
+      "./js/firebase-init.js": "./js/firebase-init.js?v=202610240203",
+      "./js/guild-rules.js": "./js/guild-rules.js?v=202610240203",
+      "./js/guild-ui.js": "./js/guild-ui.js?v=202610240203",
+      "./js/guild.js": "./js/guild.js?v=202610240203",
+      "./js/hydra-timer.js": "./js/hydra-timer.js?v=202610240203",
+      "./js/hydras-rules.js": "./js/hydras-rules.js?v=202610240203",
+      "./js/hydras-ui.js": "./js/hydras-ui.js?v=202610240203",
+      "./js/hydras.js": "./js/hydras.js?v=202610240203",
+      "./js/kinds.js": "./js/kinds.js?v=202610240203",
+      "./js/limits.js": "./js/limits.js?v=202610240203",
+      "./js/main.js": "./js/main.js?v=202610240203",
+      "./js/notifications.js": "./js/notifications.js?v=202610240203",
+      "./js/registrations.js": "./js/registrations.js?v=202610240203",
+      "./js/sections.js": "./js/sections.js?v=202610240203",
+      "./js/settings.js": "./js/settings.js?v=202610240203",
+      "./js/theme.js": "./js/theme.js?v=202610240203",
+      "./js/update-check.js": "./js/update-check.js?v=202610240203",
+      "./js/user-settings.js": "./js/user-settings.js?v=202610240203"
     }
   }
   </script>
-  <script type="module" src="js/main.js?v=202610240149"></script>
+  <script type="module" src="js/main.js?v=202610240203"></script>
 </body>
 </html>

@@ -159,3 +159,37 @@ export function formatDate(key) {
   const [y, m, d] = key.split("-");
   return `${d}/${m}/${y}`;
 }
+
+// ---------- Cronómetros "Fazer Hidra" ----------
+export const MAX_TIMERS = 6;
+
+export function newTimer() {
+  return {
+    id: `t${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+    phase: "ready", // "ready": parado · "running": a contar até endAt
+    endAt: 0,
+    marked: null, // cofres já marcados na hidra em curso (null = por marcar)
+    needsMark: false, // acabou o tempo e falta marcar essa hidra
+    available: false, // acabou o tempo e ainda não começou outra
+  };
+}
+
+function cleanTimer(raw, fallbackId) {
+  return {
+    id: typeof raw.id === "string" && raw.id ? raw.id : fallbackId,
+    phase: raw.phase === "running" ? "running" : "ready",
+    endAt: Number(raw.endAt) || 0,
+    marked: typeof raw.marked === "number" ? raw.marked : null,
+    needsMark: Boolean(raw.needsMark),
+    available: Boolean(raw.available),
+  };
+}
+
+// Lê o documento guardado: { timers: [...] }; aceita o formato antigo (um só cronómetro, sem lista).
+export function normalizeTimers(data) {
+  if (data && Array.isArray(data.timers) && data.timers.length > 0) {
+    return data.timers.slice(0, MAX_TIMERS).map((t, i) => cleanTimer(t || {}, `t${i + 1}`));
+  }
+  if (data && (data.phase === "ready" || data.phase === "running")) return [cleanTimer(data, "t1")];
+  return [{ ...newTimer(), id: "t1" }];
+}

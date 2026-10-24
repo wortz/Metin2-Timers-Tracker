@@ -2050,3 +2050,55 @@ main:has(#hidras-view:not([hidden])) {
   color: var(--text-muted);
   font-weight: 500;
 }
+
+/* Vários timers */
+.hydra-timer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hydra-timer-card {
+  position: relative;
+}
+
+.hydra-timer-title {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.hydra-timer-card .hydra-timer-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.hydra-timer-add {
+  margin-top: 12px;
+}
+
+.hydra-timer-add[hidden] {
+  display: none;
+}
+
+/* "hoje" / "ontem": por baixo da data e um pouco maiores */
+.hydra-date {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.hydra-date .hydra-tag {
+  margin-left: 0;
+  padding: 3px 11px;
+  font-size: 12px;
+}

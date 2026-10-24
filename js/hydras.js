@@ -12,7 +12,7 @@ import {
   writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { db, snapshotError } from "./firebase-init.js";
-import { DEFAULT_PRICE, MAX_CHESTS_PER_HYDRA, MAX_HYDRAS_PER_DAY, totalsOfOldDays } from "./hydras-rules.js";
+import { DEFAULT_PRICE, MAX_CHESTS_PER_HYDRA, MAX_HYDRAS_PER_DAY, normalizeTimers, totalsOfOldDays } from "./hydras-rules.js";
 
 // Registo de Hidras (por utilizador). Três coleções do Firestore:
 //   hydraDays      { ownerUid, date: "2026-10-23", hydras: [3, 4, ...], price?: 45 }   id: {uid}__{date}
@@ -53,6 +53,26 @@ export function setHydra(uid, date, index, chests) {
     else hydras[index] = value;
     tx.set(ref, { ownerUid: uid, date, hydras }, { merge: true });
   });
+}
+
+// Estado do cronómetro "Fazer Hidra" (partilhado entre os dispositivos do mesmo utilizador).
+// A lista é alterada numa transação (a função recebe a lista guardada e devolve a nova), para dois
+// dispositivos não se pisarem.
+export function mutateHydraTimers(uid, fn) {
+  const ref = doc(db, "hydraTimers", uid);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    const timers = fn(normalizeTimers(snap.exists() ? snap.data() : null));
+    tx.set(ref, { timers, updatedAt: Date.now() });
+  });
+}
+
+export function subscribeToHydraTimer(uid, onChange) {
+  return onSnapshot(
+    doc(db, "hydraTimers", uid),
+    (snap) => onChange(snap.exists() ? snap.data() : null),
+    snapshotError("hydraTimers")
+  );
 }
 
 // Preço de um cofre nesse dia; null apaga-o (o dia volta a usar o preço padrão).
