@@ -41,6 +41,7 @@ import {
 const tabsEl = document.getElementById("guild-tabs");
 const bodyEl = document.getElementById("guild-body");
 const newGuildBtn = document.getElementById("guild-new-btn");
+const accountSlot = document.getElementById("guild-account-slot");
 
 const inputModal = document.getElementById("guild-input-modal");
 const inputForm = document.getElementById("guild-input-form");
@@ -51,6 +52,7 @@ const inputError = document.getElementById("guild-input-error");
 
 const SELECTED_KEY = "timers_guild_selected";
 const ITEMS_KEY = "timers_guild_items";
+const MIN_MEDALS_KEY = "timers_guild_min_medals";
 
 // Nome das personagens: no máximo 12 caracteres (a coluna da lista tem esse tamanho).
 const MAX_CHARACTER_NAME = 12;
@@ -69,6 +71,19 @@ let collapsedAccounts = new Set();
 // Modo de edição: só nele aparecem os botões de apagar (guild, conta e personagem).
 let editMode = false;
 // Mostrar/esconder a linha de scrolls por baixo de cada personagem (guardado neste browser).
+// Filtro: só mostra as personagens com pelo menos este número de medalhas (0 = todas).
+let minMedals = (() => {
+  try {
+    return Math.max(0, Math.floor(Number(localStorage.getItem(MIN_MEDALS_KEY))) || 0);
+  } catch {
+    return 0;
+  }
+})();
+
+// Filtro de scrolls: só personagens com pelo menos 1 do item escolhido ({ group, index } ou null).
+let scrollFilter = null;
+let scrollMenuOpen = false;
+
 let showItems = (() => {
   try {
     return localStorage.getItem(ITEMS_KEY) !== "off";
@@ -168,6 +183,7 @@ function renderTabs() {
 
 function renderBody() {
   bodyEl.innerHTML = "";
+  accountSlot.innerHTML = "";
   const guild = currentGuild();
   if (!guild) {
     bodyEl.innerHTML = '<p class="empty-state">Ainda não tens nenhuma guild. Cria a primeira em "+ Nova guild".</p>';
@@ -215,12 +231,16 @@ function renderBody() {
   info.insertBefore(levelLabel, info.children[1]);
   header.appendChild(info);
 
+  // Duas linhas de ações: (Votar em falta, Guild Run) e, por baixo, (scrolls, contas, filtro, editar).
   const actions = document.createElement("div");
   actions.className = "section-header-actions";
+  const actions2 = document.createElement("div");
+  actions2.className = "section-header-actions";
   const addAccountBtn = document.createElement("button");
   addAccountBtn.className = "secondary";
   addAccountBtn.textContent = "+ Conta";
   addAccountBtn.addEventListener("click", () => openInputModal("account"));
+  accountSlot.appendChild(addAccountBtn); // fica por baixo de "+ Nova guild"
   const delGuildBtn = document.createElement("button");
   delGuildBtn.className = "icon-btn small";
   delGuildBtn.textContent = "Apagar guild";
@@ -287,10 +307,90 @@ function renderBody() {
     }
     render();
   });
-  actions.append(bulkBtn, runBtn, addAccountBtn, itemsBtn, collapseBtn);
-  if (editMode) actions.append(delGuildBtn);
-  actions.append(editBtn);
-  header.appendChild(actions);
+  // Filtro: só personagens com X medalhas ou mais.
+  const filterLabel = document.createElement("label");
+  filterLabel.className = "guild-level guild-filter";
+  filterLabel.title = "Mostra só as personagens com este número de medalhas ou mais (vazio ou 0 mostra todas)";
+  const filterInput = document.createElement("input");
+  filterInput.type = "number";
+  filterInput.className = "guild-level-input guild-filter-input";
+  filterInput.min = "0";
+  filterInput.step = "1";
+  filterInput.value = minMedals > 0 ? minMedals : "";
+  filterInput.setAttribute("aria-label", "Mostrar só personagens com este número de medalhas ou mais");
+  filterInput.addEventListener("change", () => {
+    minMedals = Math.max(0, Math.floor(Number(filterInput.value)) || 0);
+    try {
+      localStorage.setItem(MIN_MEDALS_KEY, String(minMedals));
+    } catch {
+      // sem armazenamento local: a escolha só vale nesta sessão
+    }
+    render();
+  });
+  filterInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") filterInput.blur();
+  });
+  filterLabel.appendChild(filterInput);
+  actions.append(bulkBtn, runBtn);
+  actions2.append(itemsBtn, collapseBtn);
+  if (editMode) actions2.append(delGuildBtn);
+  actions2.append(editBtn);
+
+  // "Filtro Scrolls" (e "Remover filtro"): na linha de cima, à direita.
+  const scrollRow = document.createElement("div");
+  scrollRow.className = "guild-scroll-filter";
+  const scrollBtn = document.createElement("button");
+  scrollBtn.className = scrollFilter ? "" : "secondary";
+  const chosen = scrollFilter ? ITEM_GROUPS[scrollFilter.group][scrollFilter.index] : null;
+  scrollBtn.textContent = chosen ? `Filtro Scrolls: ${chosen.name}` : "Filtro Scrolls";
+  scrollBtn.title = "Mostra só as personagens que têm pelo menos 1 do item escolhido";
+  scrollBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    scrollMenuOpen = !scrollMenuOpen;
+    render();
+  });
+  scrollRow.appendChild(scrollBtn);
+  if (scrollFilter) {
+    const clearBtn = document.createElement("button");
+    clearBtn.className = "secondary";
+    clearBtn.textContent = "Remover filtro";
+    clearBtn.addEventListener("click", () => {
+      scrollFilter = null;
+      scrollMenuOpen = false;
+      render();
+    });
+    scrollRow.appendChild(clearBtn);
+  }
+  if (scrollMenuOpen) {
+    const menu = document.createElement("div");
+    menu.className = "guild-scroll-menu";
+    menu.addEventListener("click", (e) => e.stopPropagation());
+    for (const group of ["scrolls", "land"]) {
+      ITEM_GROUPS[group].forEach((item, index) => {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = "secondary guild-scroll-option" + (scrollFilter?.group === group && scrollFilter.index === index ? " active" : "");
+        const icon = document.createElement("img");
+        icon.className = "guild-item-icon";
+        icon.src = item.icon;
+        icon.alt = "";
+        option.append(icon, item.name);
+        option.addEventListener("click", () => {
+          scrollFilter = { group, index }; // só um item de cada vez
+          scrollMenuOpen = false;
+          render();
+        });
+        menu.appendChild(option);
+      });
+    }
+    scrollRow.appendChild(menu);
+  }
+  actions.appendChild(scrollRow);
+  actions2.appendChild(filterLabel); // o filtro de medalhas fica sozinho à direita da linha de baixo
+  const actionsCol = document.createElement("div");
+  actionsCol.className = "guild-actions-col";
+  actionsCol.append(actions, actions2);
+  header.appendChild(actionsCol);
   bodyEl.appendChild(header);
 
   const guildAccounts = accountsOf(guild.id);
@@ -381,11 +481,22 @@ function buildAccount(account, guildAtLimit) {
     return block;
   }
 
+  const shown = chars.filter(
+    (c) => (c.medals || 0) >= minMedals && (!scrollFilter || itemCount(c, scrollFilter.group, scrollFilter.index) >= 1)
+  );
+  if (shown.length === 0) {
+    const none = document.createElement("p");
+    none.className = "empty-hint";
+    none.textContent = "Nenhuma personagem corresponde aos filtros.";
+    block.appendChild(none);
+    return block;
+  }
+
   const labels = document.createElement("div");
   labels.className = "guild-row guild-row-labels";
   labels.innerHTML = "<span>Personagem</span><span>Descrição</span><span>Medalhas</span><span>Lv70+</span><span>Votar</span><span></span>";
   block.appendChild(labels);
-  for (const char of chars) {
+  for (const char of shown) {
     block.appendChild(buildCharacterRow(char));
     if (showItems) block.appendChild(buildItemsRow(char));
   }
@@ -963,6 +1074,13 @@ function openInputModal(mode, account = null) {
 }
 
 newGuildBtn.addEventListener("click", () => openInputModal("guild"));
+
+document.addEventListener("click", () => {
+  if (scrollMenuOpen) {
+    scrollMenuOpen = false;
+    render();
+  }
+});
 document.getElementById("guild-input-cancel").addEventListener("click", () => inputModal.close());
 
 inputForm.addEventListener("submit", async (e) => {

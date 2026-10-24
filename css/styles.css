@@ -2102,3 +2102,90 @@ main:has(#hidras-view:not([hidden])) {
   padding: 3px 11px;
   font-size: 12px;
 }
+
+/* Guild: botões do topo e ações da guild em duas linhas */
+.guild-top-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.guild-actions-col {
+  flex: 1 1 auto; /* ocupa o resto da linha, para o filtro ir mesmo até à direita */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* A linha das ações da guild ocupa a largura toda para o filtro ficar sozinho à direita */
+.guild-actions-col > .section-header-actions {
+  width: 100%;
+}
+
+.guild-filter,
+.guild-scroll-filter {
+  margin-left: auto;
+}
+
+.guild-actions-col > .section-header-actions {
+  align-items: flex-start;
+}
+
+.guild-scroll-filter {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.guild-scroll-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 20;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  min-width: 220px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.guild-scroll-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  border: none;
+  text-align: left;
+  font-weight: 500;
+}
+
+.guild-scroll-option.active {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Filtro de medalhas: sem as setas de subir/descer */
+.guild-filter-input {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.guild-filter-input::-webkit-outer-spin-button,
+.guild-filter-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.guild-filter .guild-filter-input {
+  width: 96px;
+  height: 38px;
+  padding: 0 10px;
+  font-size: 14px;
+}

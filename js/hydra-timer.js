@@ -42,57 +42,132 @@ const displays = new Map(); // id do timer -> elemento com o tempo
 let todayDays = [];
 
 // ---------- Som ----------
+// Os sons são agendados no relógio do áudio (Web Audio) no momento em que o timer começa. Assim
+// tocam à hora certa mesmo com a página em segundo plano, onde o browser atrasa os temporizadores
+// normais (por vezes até um minuto). O browser só deixa tocar áudio depois de uma interação com a
+// página, por isso o áudio é preparado no primeiro clique/tecla e os timers em curso agendam-se nessa altura.
 function soundOn() {
   return soundToggle.checked;
 }
 
-// O browser só deixa tocar áudio depois de um clique: criamos/retomamos o contexto nos botões.
+let alertGain = null; // volume do alerta final (ligado/desligado pelo toggle "Som")
+let warnGain = null; // volume do aviso dos 17:20 (toggles "Som" e "Aviso")
+const buffers = new Map(); // url -> AudioBuffer (ou null se falhou)
+const scheduled = new Map(); // id do timer -> { endAt, nodes } dos sons já agendados
+
+function applyGains() {
+  if (alertGain) alertGain.gain.value = soundOn() ? 1 : 0;
+  if (warnGain) warnGain.gain.value = soundOn() && warnToggle.checked ? 1 : 0;
+}
+
+async function loadBuffer(url) {
+  try {
+    const response = await fetch(url);
+    buffers.set(url, await audioCtx.decodeAudioData(await response.arrayBuffer()));
+  } catch {
+    buffers.set(url, null); // sem a gravação, ficam só os beeps
+  }
+  // Volta a agendar os timers em curso, agora com a gravação incluída.
+  for (const done of scheduled.values()) for (const node of done.nodes) node.stop();
+  scheduled.clear();
+  syncSchedule();
+}
+
+// Cria/retoma o contexto de áudio (precisa de ser chamado a partir de uma interação do utilizador).
 function unlockAudio() {
   try {
     audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") audioCtx.resume();
+    if (!alertGain) {
+      alertGain = audioCtx.createGain();
+      warnGain = audioCtx.createGain();
+      alertGain.connect(audioCtx.destination);
+      warnGain.connect(audioCtx.destination);
+      applyGains();
+      for (const url of [VOICE_URL, WARNING_URL]) loadBuffer(url);
+    }
   } catch {
     audioCtx = null;
   }
 }
 
-function tone(freq, start, length, volume = 0.25) {
+function tone(freq, at, length, dest, nodes, volume = 0.25) {
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.type = "triangle";
   osc.frequency.value = freq;
-  gain.gain.setValueAtTime(0.0001, audioCtx.currentTime + start);
-  gain.gain.exponentialRampToValueAtTime(volume, audioCtx.currentTime + start + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + start + length);
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start(audioCtx.currentTime + start);
-  osc.stop(audioCtx.currentTime + start + length + 0.05);
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(volume, at + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
+  osc.connect(gain).connect(dest);
+  osc.start(at);
+  osc.stop(at + length + 0.05);
+  nodes.push(osc);
 }
 
-// "Hidra Available": um toque ascendente (dó–mi–sol–dó), repetido duas vezes.
-function playHydraAvailable() {
-  unlockAudio();
-  if (audioCtx) {
-    const notes = [523.25, 659.25, 783.99, 1046.5];
-    for (let round = 0; round < 2; round++) {
-      notes.forEach((freq, i) => tone(freq, round * 0.9 + i * 0.16, round === 1 && i === 3 ? 0.6 : 0.22));
-    }
+function playBuffer(url, at, dest, nodes) {
+  const buffer = buffers.get(url);
+  if (!buffer) return;
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(dest);
+  source.start(at);
+  nodes.push(source);
+}
+
+// "Hidra Available": um toque ascendente (dó–mi–sol–dó), repetido duas vezes, e a gravação.
+function scheduleAlert(at, dest, nodes) {
+  const notes = [523.25, 659.25, 783.99, 1046.5];
+  for (let round = 0; round < 2; round++) {
+    notes.forEach((freq, i) => tone(freq, at + round * 0.9 + i * 0.16, round === 1 && i === 3 ? 0.6 : 0.22, dest, nodes));
   }
-  // Depois do toque, a voz "Hydra available" (se o ficheiro faltar, fica só o toque).
-  setTimeout(() => {
-    const voice = new Audio(VOICE_URL);
-    voice.play().catch(() => {});
-  }, 1900);
+  playBuffer(VOICE_URL, at + 1.9, dest, nodes);
 }
 
 // Aviso dos 17:20: dois beeps curtos e depois a gravação.
-function playWarning() {
+function scheduleWarning(at, dest, nodes) {
+  for (let i = 0; i < 2; i++) tone(880, at + i * 0.25, 0.15, dest, nodes);
+  playBuffer(WARNING_URL, at + 0.7, dest, nodes);
+}
+
+// Botão "Testar som": toca já o alerta (ignora os toggles).
+function playHydraAvailable() {
   unlockAudio();
-  if (audioCtx) for (let i = 0; i < 2; i++) tone(880, i * 0.25, 0.15);
-  setTimeout(() => {
-    const voice = new Audio(WARNING_URL);
-    voice.play().catch(() => {});
-  }, 700);
+  if (audioCtx) scheduleAlert(audioCtx.currentTime + 0.05, audioCtx.destination, []);
+}
+
+// Agenda os sons dos timers a contar (e cancela os de timers que mudaram ou pararam).
+function syncSchedule() {
+  if (!audioCtx || !alertGain) return;
+  const now = Date.now();
+  const live = new Set();
+  for (const timer of timers) {
+    if (timer.phase !== "running" || timer.endAt <= now) continue;
+    live.add(timer.id);
+    const done = scheduled.get(timer.id);
+    if (done && done.endAt === timer.endAt) continue;
+    if (done) for (const node of done.nodes) node.stop();
+    const nodes = [];
+    const toCtx = (ms) => audioCtx.currentTime + (ms - now) / 1000;
+    if (timer.endAt - WARN_REMAINING_MS > now) scheduleWarning(toCtx(timer.endAt - WARN_REMAINING_MS), warnGain, nodes);
+    scheduleAlert(toCtx(timer.endAt), alertGain, nodes);
+    scheduled.set(timer.id, { endAt: timer.endAt, nodes });
+  }
+  for (const [id, done] of scheduled) {
+    if (live.has(id)) continue;
+    // Se o tempo já acabou, o alerta está a tocar: deixa-o. Se foi cancelado antes, silencia.
+    if (done.endAt > now) for (const node of done.nodes) node.stop();
+    scheduled.delete(id);
+  }
+}
+
+// Primeira interação com a página: prepara o áudio e agenda os timers que já estavam a contar.
+function unlockOnGesture() {
+  unlockAudio();
+  syncSchedule();
+}
+for (const type of ["pointerdown", "keydown", "touchstart"]) {
+  document.addEventListener(type, unlockOnGesture, { capture: true, passive: true });
 }
 
 // ---------- Estado ----------
@@ -113,7 +188,7 @@ function startTimer(id) {
   );
 }
 
-function finishTimer(id) {
+function finishTimer(id, withSound) {
   const now = Date.now();
   change(
     mapTimer(id, (t) =>
@@ -122,7 +197,7 @@ function finishTimer(id) {
         : t
     )
   );
-  if (soundOn()) playHydraAvailable();
+  if (withSound && soundOn() && audioCtx && alertGain) scheduleAlert(audioCtx.currentTime + 0.05, alertGain, []);
 }
 
 function cancelTimer(id) {
@@ -172,13 +247,14 @@ function tick() {
   const now = Date.now();
   for (const timer of timers) {
     if (timer.phase !== "running") continue;
+    const handled = scheduled.get(timer.id)?.endAt === timer.endAt; // os sons já estão agendados
     if (now >= timer.endAt) {
-      finishTimer(timer.id);
+      finishTimer(timer.id, !handled);
       return; // o ecrã foi refeito; os outros tratam-se no próximo ciclo
     }
     if (now >= timer.endAt - WARN_REMAINING_MS && warnedFor.get(timer.id) !== timer.endAt) {
       warnedFor.set(timer.id, timer.endAt);
-      if (soundOn() && warnToggle.checked) playWarning();
+      if (!handled && audioCtx && warnGain) scheduleWarning(audioCtx.currentTime + 0.05, warnGain, []);
     }
   }
   renderTimes();
@@ -344,9 +420,11 @@ function render() {
     timers.forEach((timer, index) => listEl.appendChild(buildTimerCard(timer, index)));
   }
   renderToday();
+  syncSchedule();
 }
 
 soundTestBtn.addEventListener("click", playHydraAvailable);
+soundToggle.addEventListener("change", applyGains);
 
 // O aviso dos 17:20 pode ser ligado ou desligado; a escolha fica neste browser.
 try {
@@ -355,6 +433,7 @@ try {
   // sem localStorage: fica ligado
 }
 warnToggle.addEventListener("change", () => {
+  applyGains();
   try {
     localStorage.setItem("hydraWarn", warnToggle.checked ? "on" : "off");
   } catch {
