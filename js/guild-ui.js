@@ -51,7 +51,19 @@ const inputField = document.getElementById("guild-input");
 const inputError = document.getElementById("guild-input-error");
 
 const SELECTED_KEY = "timers_guild_selected";
-const ITEMS_KEY = "timers_guild_items";
+const ITEMS_KEY = "timers_guild_items"; // cookie (e valor antigo no localStorage)
+const COLLAPSED_KEY = "timers_guild_collapsed"; // cookie: ids das contas recolhidas, separados por vírgulas
+
+// As preferências do ecrã ficam em cookies (1 ano), só para este site.
+function readCookie(name) {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function writeCookie(name, value) {
+  const path = location.pathname.replace(/[^/]*$/, "") || "/";
+  document.cookie = `${name}=${encodeURIComponent(value)}; max-age=31536000; path=${path}; SameSite=Lax`;
+}
 const MIN_MEDALS_KEY = "timers_guild_min_medals";
 
 // Nome das personagens: no máximo 12 caracteres (a coluna da lista tem esse tamanho).
@@ -67,7 +79,26 @@ let guilds = [];
 let accounts = [];
 let characters = [];
 let selectedGuildId = null;
-let collapsedAccounts = new Set();
+// Contas recolhidas: cada alteração fica guardada no cookie.
+class CollapsedSet extends Set {
+  add(id) {
+    super.add(id);
+    this.save();
+    return this;
+  }
+
+  delete(id) {
+    const removed = super.delete(id);
+    this.save();
+    return removed;
+  }
+
+  save() {
+    writeCookie(COLLAPSED_KEY, [...this].slice(-60).join(","));
+  }
+}
+let collapsedAccounts = new CollapsedSet();
+for (const id of (readCookie(COLLAPSED_KEY) || "").split(",")) if (id) Set.prototype.add.call(collapsedAccounts, id);
 // Modo de edição: só nele aparecem os botões de apagar (guild, conta e personagem).
 let editMode = false;
 // Mostrar/esconder a linha de scrolls por baixo de cada personagem (guardado neste browser).
@@ -85,8 +116,10 @@ let scrollFilter = null;
 let scrollMenuOpen = false;
 
 let showItems = (() => {
+  const saved = readCookie(ITEMS_KEY);
+  if (saved !== null) return saved !== "off";
   try {
-    return localStorage.getItem(ITEMS_KEY) !== "off";
+    return localStorage.getItem(ITEMS_KEY) !== "off"; // valor guardado antes de usar cookies
   } catch {
     return true;
   }
@@ -285,11 +318,7 @@ function renderBody() {
   itemsBtn.title = "Mostra ou esconde a linha de scrolls e Guild Land de cada personagem";
   itemsBtn.addEventListener("click", () => {
     showItems = !showItems;
-    try {
-      localStorage.setItem(ITEMS_KEY, showItems ? "on" : "off");
-    } catch {
-      // sem armazenamento local: a escolha só vale nesta sessão
-    }
+    writeCookie(ITEMS_KEY, showItems ? "on" : "off");
     render();
   });
   // Recolhe todas as contas de uma vez (ou expande-as, se já estiverem todas recolhidas).
