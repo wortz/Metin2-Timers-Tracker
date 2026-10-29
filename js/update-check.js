@@ -7,6 +7,7 @@ const CHECK_EVERY_MS = 5 * 60 * 1000;
 const currentVersion = new URL(import.meta.url).searchParams.get("v");
 
 let bannerShown = false;
+let pendingLatest = null; // versão vista na verificação anterior (só se avisa à segunda vez igual)
 
 async function fetchLatestVersion() {
   const res = await fetch(`index.html?_=${Date.now()}`, { cache: "no-store" });
@@ -20,7 +21,10 @@ function showBanner(latest) {
   bannerShown = true;
   const banner = document.createElement("div");
   banner.className = "update-banner";
-  banner.innerHTML = '<span>Há uma nova versão da app.</span>';
+  const text = document.createElement("span");
+  // As duas versões aparecem na faixa para se perceber de onde vem o aviso.
+  text.textContent = `Há uma nova versão da app (${currentVersion} → ${latest}).`;
+  banner.appendChild(text);
   const button = document.createElement("button");
   button.textContent = "Recarregar";
   button.addEventListener("click", () => {
@@ -37,7 +41,17 @@ async function check() {
   if (!currentVersion || bannerShown) return;
   try {
     const latest = await fetchLatestVersion();
-    if (latest && latest !== currentVersion) showBanner(latest);
+    if (latest && latest !== currentVersion) {
+      console.info(`Versão da app: esta página tem ${currentVersion}, o servidor tem ${latest}.`);
+      // Confirma passado um minuto, para não avisar por uma resposta passageira do servidor.
+      if (pendingLatest === latest) showBanner(latest);
+      else {
+        pendingLatest = latest;
+        setTimeout(check, 60 * 1000);
+      }
+    } else {
+      pendingLatest = null;
+    }
   } catch {
     // Sem rede ou erro temporário: tenta de novo na próxima verificação.
   }
