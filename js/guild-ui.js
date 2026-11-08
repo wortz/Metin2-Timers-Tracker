@@ -232,7 +232,7 @@ function renderBody() {
   const info = document.createElement("div");
   info.className = "guild-info";
   info.innerHTML = `<h3></h3><span class="guild-total">Total: <strong>${fmt(total)}</strong> medalhas</span>
-    <span class="guild-count">${guildChars.length}/${maxChars()} personagens</span>
+    <span class="guild-count" title="Personagens que já votaram tudo hoje / personagens adicionadas">${guildChars.filter(isVoted).length}/${guildChars.length} votaram</span>
     <span class="guild-count">Doações e participação reiniciam às 03:00 PT (04:00 CZ/CH)</span>`;
   info.querySelector("h3").textContent = guild.name;
 
