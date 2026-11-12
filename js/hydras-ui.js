@@ -15,7 +15,6 @@ import {
 import {
   DEFAULT_PRICE,
   MAX_CHESTS_PER_HYDRA,
-  MAX_HYDRAS_PER_DAY,
   QUICK_CHESTS,
   cutoffKey,
   dateKey,
@@ -201,7 +200,7 @@ function buildDayRow(date, day, today, monthDefault, best) {
     });
     cells.appendChild(chip);
   });
-  if (editable && hydras.length < MAX_HYDRAS_PER_DAY) {
+  if (editable) {
     const add = document.createElement("span");
     add.className = "hydra-add";
     add.append("Nova hidra:");

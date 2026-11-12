@@ -4,7 +4,6 @@
 //   Cofres = soma da lista · Hidras = quantas há · Média = Cofres ÷ Hidras
 //   Wons   = Cofres × Preço ÷ 100  (o Preço é o de um cofre nesse dia)
 
-export const MAX_HYDRAS_PER_DAY = 50;
 export const MAX_CHESTS_PER_HYDRA = 5; // cada hidra dá de 0 a 5 cofres
 export const QUICK_CHESTS = [0, 1, 2, 3, 4, 5];
 export const DEFAULT_PRICE = 40; // preço padrão inicial (o utilizador pode mudá-lo)
@@ -142,8 +141,6 @@ export function parseImport(text) {
       errors.push(`Linha ${i + 1}: data inválida.`);
     } else if (hydras.some((n) => !Number.isInteger(n) || n < 0 || n > MAX_CHESTS_PER_HYDRA)) {
       errors.push(`Linha ${i + 1}: cada hidra tem de ter entre 0 e ${MAX_CHESTS_PER_HYDRA} cofres.`);
-    } else if (hydras.length > MAX_HYDRAS_PER_DAY) {
-      errors.push(`Linha ${i + 1}: no máximo ${MAX_HYDRAS_PER_DAY} hidras por dia.`);
     } else {
       days.push({ date: key, hydras });
     }
