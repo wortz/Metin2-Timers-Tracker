@@ -4,7 +4,7 @@
 //   Cofres = soma da lista · Hidras = quantas há · Média = Cofres ÷ Hidras
 //   Wons   = Cofres × Preço ÷ 100  (o Preço é o de um cofre nesse dia)
 
-export const MAX_HYDRAS_PER_DAY = 35; // a folha tem 35 colunas por dia
+export const MAX_HYDRAS_PER_DAY = 50;
 export const MAX_CHESTS_PER_HYDRA = 5; // cada hidra dá de 0 a 5 cofres
 export const QUICK_CHESTS = [0, 1, 2, 3, 4, 5];
 export const DEFAULT_PRICE = 40; // preço padrão inicial (o utilizador pode mudá-lo)

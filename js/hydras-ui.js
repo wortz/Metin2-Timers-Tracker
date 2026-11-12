@@ -134,7 +134,8 @@ function renderBody() {
     <span>Cofres <b>${total.cofres}</b></span>
     <span>Hidras <b>${total.hidras}</b></span>
     <span>Média <b>${formatNumber(total.media)}</b></span>
-    <span>Wons <b>${formatNumber(total.wons)}</b></span>`;
+    <span>Wons <b>${formatNumber(total.wons)}</b></span>
+    <span>Wons por hidra <b>${formatNumber(total.hidras > 0 ? total.wons / total.hidras : 0)}</b></span>`;
   bodyEl.appendChild(summary);
 
   const head = document.createElement("div");
@@ -273,13 +274,13 @@ function renderOlderMonths() {
 
   const head = document.createElement("div");
   head.className = "hydra-month-row hydra-row-head";
-  head.innerHTML = "<span>Mês</span><span>Cofres</span><span>Hidras</span><span>Média</span><span>Wons</span>";
+  head.innerHTML = "<span>Mês</span><span>Cofres</span><span>Hidras</span><span>Média</span><span>Wons</span><span>Wons por hidra</span>";
   bodyEl.appendChild(head);
   for (const m of older) {
     const media = m.hidras > 0 ? m.cofres / m.hidras : 0;
     const row = document.createElement("div");
     row.className = "hydra-month-row";
-    row.append(textCell(monthLabel(m.month)), textCell(m.cofres), textCell(m.hidras), textCell(formatNumber(media)), textCell(formatNumber(m.wons)));
+    row.append(textCell(monthLabel(m.month)), textCell(m.cofres), textCell(m.hidras), textCell(formatNumber(media)), textCell(formatNumber(m.wons)), textCell(formatNumber(m.hidras > 0 ? m.wons / m.hidras : 0)));
     bodyEl.appendChild(row);
   }
 }

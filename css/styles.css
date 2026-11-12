@@ -1735,7 +1735,7 @@ fieldset legend {
 
 .hydra-month-row {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 1.2fr;
   gap: 12px;
   padding: 8px;
   border-top: 1px solid var(--border);
