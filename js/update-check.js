@@ -57,12 +57,31 @@ async function check() {
   }
 }
 
+// Ao abrir a página: se o browser serviu uma cópia antiga do index.html, recarrega logo para a
+// versão nova (uma só vez, para nunca ficar em ciclo). Ainda não há nada para perder.
+async function reloadIfStaleOnOpen() {
+  if (!currentVersion) return;
+  try {
+    const latest = await fetchLatestVersion();
+    if (latest && latest !== currentVersion) {
+      console.info(`Versão da app: esta página tem ${currentVersion}, o servidor tem ${latest}. A recarregar.`);
+      const url = new URL(location.href);
+      url.searchParams.set("update", latest);
+      location.replace(url);
+    }
+  } catch {
+    // Sem rede: fica como está.
+  }
+}
+
 export function startUpdateCheck() {
-  // Limpa o parâmetro usado para forçar o recarregamento.
+  // Limpa o parâmetro usado para forçar o recarregamento (e não repete o recarregamento automático).
   const url = new URL(location.href);
   if (url.searchParams.has("update")) {
     url.searchParams.delete("update");
     history.replaceState(null, "", url);
+  } else {
+    reloadIfStaleOnOpen();
   }
   setInterval(check, CHECK_EVERY_MS);
   document.addEventListener("visibilitychange", () => {
